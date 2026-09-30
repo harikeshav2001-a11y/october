@@ -11,7 +11,7 @@ export function metList(p) {
 }
 export const doneCount = (p) => metList(p).filter(Boolean).length;
 
-const KEY = 'october26:v1';
+const KEY = 'october26:v1' + (new URLSearchParams(location.search).get('couple') ? ':test' : '');
 const FB = '10.12.2';
 
 export function createStore(cfg, onChange) {
@@ -72,7 +72,9 @@ export function createStore(cfg, onChange) {
     const fauth = auth.getAuth(fapp);
     await auth.setPersistence(fauth, auth.browserLocalPersistence).catch(() => { });
     const db = fs.initializeFirestore(fapp, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
-    const couple = fs.doc(db, 'couples', cfg.coupleId);
+    // ?couple=test writes to a separate test space so trial runs never touch the real month
+    const coupleId = new URLSearchParams(location.search).get('couple') || cfg.coupleId;
+    const couple = fs.doc(db, 'couples', coupleId);
     const col = fs.collection(couple, 'entries');
     let unsub = [];
 
