@@ -81,7 +81,6 @@ export function createStore(cfg, onChange) {
     // config holds SHA-256 hashes of the two emails (the repo is public); plain emails also work
     const people = { a: (cfg.people.a || '').toLowerCase(), b: (cfg.people.b || '').toLowerCase() };
     const sha = async (t) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))).map(x => x.toString(16).padStart(2, '0')).join('');
-    auth.getRedirectResult(fauth).catch(e => { s.authError = e.code || String(e); onChange(); });
 
     auth.onAuthStateChanged(fauth, async (user) => {
       unsub.forEach(u => u()); unsub = [];
@@ -116,10 +115,14 @@ export function createStore(cfg, onChange) {
         const provider = new auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         s.authError = null;
+        // popup only: redirect sign-in breaks on iOS Safari because the auth domain's storage is partitioned
         try { await auth.signInWithPopup(fauth, provider); }
         catch (e) {
-          if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') await auth.signInWithRedirect(fauth, provider);
-          else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') { s.authError = e.code || String(e); onChange(); }
+          if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+          s.authError = (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')
+            ? 'Sign-in can\'t open here. Open this link in Safari, or from the October app on your home screen.'
+            : (e.code || String(e));
+          onChange();
         }
       },
       signOut: () => auth.signOut(fauth)

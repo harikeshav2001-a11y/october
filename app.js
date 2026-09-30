@@ -409,7 +409,9 @@ function authScreen() {
     <p style="margin:0;font-size:21px;line-height:1.28;letter-spacing:-0.015em;font-weight:500;color:#c8c8cc;text-wrap:pretty">${msg}</p>
     ${S.auth === 'signin' ? `<button data-act="signin" style="height:48px;border-radius:999px;border:0;background:#f2f2f0;color:#0b0b0c;font-family:Geist,system-ui,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform .12s">Continue with Google</button>` : ''}
     ${S.auth === 'denied' ? `<button data-act="signout" style="${HDR_BTN};align-self:flex-start">USE ANOTHER ACCOUNT</button>` : ''}
-    ${S.authError ? `<div style="font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#8a8a90">${esc(S.authError).toUpperCase()}</div>` : ''}`);
+    ${S.authError ? (S.authError.includes(' ')
+      ? `<div style="font-size:15px;line-height:1.4;color:#c8c8cc">${esc(S.authError)}</div>`
+      : `<div style="font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#8a8a90">${esc(S.authError).toUpperCase()}</div>`) : ''}`);
 }
 
 // ---------- render ----------
