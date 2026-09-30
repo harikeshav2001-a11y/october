@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#0b0b0c}a{color:#f2f2f0}a:hover{color:#fff}textarea::placeholder,input::placeholder{color:#55555a}</style>
+</helmet>
+<div ref="{{ rootRef }}" onPointerDown="{{ onSwipeDown }}" style="position:relative;width:100%;height:100%;min-height:640px;overflow:hidden;background:#0b0b0c;color:#f2f2f0;font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased">
+  <div style="{{ trackStyle }}">
+
+    <div style="flex:0 0 50%;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none" data-screen-label="Today">
+      <div style="padding:60px 16px 0;display:flex;align-items:flex-end;justify-content:space-between">
+        <div style="display:flex;align-items:baseline;gap:2px">
+          <span style="font-size:58px;font-weight:500;letter-spacing:-0.045em;line-height:.9">{{ dayNum }}</span>
+          <span style="font-size:58px;font-weight:500;letter-spacing:-0.045em;line-height:.9;color:#34343a">/31</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          <button onClick="{{ goCalendar }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:1px solid #2a2a2e;background:#161618;color:#c8c8cc;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:transform .15s" style-active="transform:scale(0.95)">
+            <span style="display:grid;grid-template-columns:repeat(3,3px);gap:2px"><span style="width:3px;height:3px;border-radius:50%;background:#f2f2f0"></span><span style="width:3px;height:3px;border-radius:50%;background:#f2f2f0"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span><span style="width:3px;height:3px;border-radius:50%;background:#f2f2f0"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span><span style="width:3px;height:3px;border-radius:50%;background:#55555a"></span></span>
+            CALENDAR
+          </button>
+          <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.06em;color:#8a8a90">{{ dateTag }}</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ offline }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:14px 16px 0;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#161618;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#a0a0a6"><span style="width:6px;height:6px;border-radius:50%;background:#8a8a90"></span>OFFLINE · SAVED ON THIS PHONE, SYNCS WHEN BACK</div>
+      </sc-if>
+
+      <div style="padding:0 16px 56px;display:flex;flex-direction:column;gap:10px">
+        <p style="margin:16px 0 8px;font-size:21px;line-height:1.28;letter-spacing:-0.015em;font-weight:500;text-wrap:pretty">
+          <sc-for list="{{ summary }}" as="s" hint-placeholder-count="6"><span style="{{ s.st }}">{{ s.t }}</span></sc-for>
+        </p>
+
+        <div style="{{ notes.fromCard }}">
+          <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90;text-transform:uppercase"><span style="white-space:nowrap">{{ notes.fromLabel }}</span><span>{{ notes.fromMeta }}</span></div>
+          <div style="{{ notes.fromTextSt }}">{{ notes.fromText }}</div>
+        </div>
+        <div style="{{ notes.toCard }}">
+          <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90;text-transform:uppercase"><span style="white-space:nowrap">{{ notes.toLabel }}</span><span style="white-space:nowrap"><span style="{{ notes.toMetaSt }}">{{ notes.toMeta }}</span></span></div>
+          <textarea value="{{ notes.toText }}" onChange="{{ notes.onChange }}" rows="3" placeholder="{{ notes.toPh }}" style="background:transparent;border:0;outline:none;resize:none;color:#f2f2f0;font-family:Geist,system-ui,sans-serif;font-size:15px;line-height:1.4;padding:0;margin:0"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+          <div data-noswipe="1" onPointerDown="{{ t.water.down }}" style="grid-row:span 2;position:relative;overflow:hidden;background:#161618;border-radius:22px;min-height:250px;touch-action:none;user-select:none;cursor:ns-resize">
+            <div style="{{ t.water.fill }}"></div>
+            <div style="position:absolute;right:14px;width:28px;bottom:71.4%;border-top:1px dashed #55555a"></div>
+            <div style="{{ t.water.glow }}"></div>
+            <div style="position:relative;padding:14px 16px;display:flex;flex-direction:column;height:100%;box-sizing:border-box">
+              <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">WATER</div>
+              <div style="margin-top:4px;display:flex;align-items:baseline;gap:3px"><span style="font-size:48px;font-weight:500;letter-spacing:-0.045em;font-variant-numeric:tabular-nums">{{ t.water.big }}</span><span style="font-size:17px;color:#6b6b70">/2.5 L</span></div>
+              <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+                <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.water.o }}</span></div>
+                <div style="height:3px;background:#2a2a2e;border-radius:2px;overflow:hidden"><div style="{{ t.water.oBar }}"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>NO JUNK</span><span style="white-space:nowrap">{{ t.junk.meta }}</span></div>
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ t.junk.pills }}" as="pl" hint-placeholder-count="2"><button onClick="{{ pl.onClick }}" style="{{ pl.style }}" style-active="transform:scale(0.95)">{{ pl.label }}</button></sc-for>
+            </div>
+            <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.junk.o }}</span></div>
+          </div>
+
+          <div data-noswipe="1" onPointerDown="{{ t.sleep.down }}" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;cursor:ew-resize">
+            <div style="{{ t.sleep.glow }}"></div>
+            <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">SLEEP</div>
+              <div style="display:flex;align-items:baseline;gap:4px"><span style="font-size:30px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums">{{ t.sleep.big }}</span><span style="font-size:14px;color:#6b6b70">hrs</span></div>
+              <div data-ruler="1" style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">
+                <sc-for list="{{ t.sleep.ticks }}" as="tk"><span style="{{ tk }}"></span></sc-for>
+                <span style="{{ t.sleep.head }}"></span>
+              </div>
+              <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.sleep.o }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div data-noswipe="1" onPointerDown="{{ t.outside.down }}" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;cursor:ew-resize">
+          <div style="{{ t.outside.glow }}"></div>
+          <div style="position:relative;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">OUTSIDE</div>
+                <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:40px;font-weight:500;letter-spacing:-0.045em;font-variant-numeric:tabular-nums;line-height:1">{{ t.outside.big }}</span><span style="font-size:16px;color:#6b6b70">/20 min</span></div>
+              </div>
+              <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.outside.o }}</span></div>
+            </div>
+            <div data-ruler="1" style="position:relative;height:28px;display:flex;align-items:flex-end;justify-content:space-between">
+              <sc-for list="{{ t.outside.ticks }}" as="tk"><span style="{{ tk }}"></span></sc-for>
+              <span style="{{ t.outside.head }}"></span>
+            </div>
+            <div style="height:3px;background:#2a2a2e;border-radius:2px;overflow:hidden"><div style="{{ t.outside.oBar }}"></div></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px">
+          <div style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>GYM</span><span style="white-space:nowrap">{{ t.gym.meta }}</span></div>
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ t.gym.pills }}" as="pl" hint-placeholder-count="2"><button onClick="{{ pl.onClick }}" style="{{ pl.style }}" style-active="transform:scale(0.95)">{{ pl.label }}</button></sc-for>
+            </div>
+            <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#6b6b70">{{ t.gym.sub }}</div>
+            <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.gym.o }}</span></div>
+          </div>
+          <div data-noswipe="1" onPointerDown="{{ t.steps.down }}" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;cursor:ew-resize">
+            <div style="{{ t.steps.glow }}"></div>
+            <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">STEPS</div>
+              <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:30px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums">{{ t.steps.big }}</span><span style="font-size:14px;color:#6b6b70">/10k</span></div>
+              <div data-ruler="1" style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">
+                <sc-for list="{{ t.steps.ticks }}" as="tk"><span style="{{ tk }}"></span></sc-for>
+                <span style="{{ t.steps.head }}"></span>
+              </div>
+              <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.steps.o }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#161618;border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>PHONE-FREE MEALS</span><span style="white-space:nowrap">{{ t.meals.meta }}</span></div>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ t.meals.pills }}" as="pl" hint-placeholder-count="3"><button onClick="{{ pl.onClick }}" style="{{ pl.style }}" style-active="transform:scale(0.95)">{{ pl.label }}</button></sc-for>
+          </div>
+          <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.meals.o }}</span></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,0.8fr) minmax(0,1.2fr);gap:10px">
+          <div data-noswipe="1" onPointerDown="{{ t.read.down }}" style="{{ t.read.tile }}">
+            <div style="{{ t.read.glow }}"></div>
+            <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>READ</span><span style="white-space:nowrap">{{ t.read.meta }}</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;margin:2px 0">
+                <sc-for list="{{ t.read.wheel }}" as="wh" hint-placeholder-count="5"><span style="{{ wh.st }}">{{ wh.t }}</span></sc-for>
+              </div>
+              <div style="text-align:center;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#6b6b70">PAGES · /10</div>
+              <div style="{{ otc }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.read.o }}</span></div>
+            </div>
+          </div>
+          <div style="{{ t.grat.tile }}">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>GRATITUDE</span><span style="white-space:nowrap">{{ t.grat.meta }}</span></div>
+            <sc-for list="{{ t.grat.items }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;align-items:baseline;gap:8px;border-bottom:1px solid #26262a;padding-bottom:6px">
+                <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#55555a">{{ g.n }}</span>
+                <input value="{{ g.v }}" onChange="{{ g.onChange }}" placeholder="Tonight…" maxLength="80" style="flex:1;min-width:0;background:transparent;border:0;outline:none;color:#f2f2f0;font-family:Geist,system-ui,sans-serif;font-size:14px;padding:0">
+              </div>
+            </sc-for>
+            <div style="{{ ot }}"><span style="{{ od }}"></span><span style="white-space:nowrap">{{ oName }} {{ t.grat.o }}</span></div>
+          </div>
+        </div>
+
+        <div onClick="{{ goCalendar }}" style="margin-top:8px;display:flex;flex-direction:column;gap:10px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90"><span>OCTOBER →</span><span style="display:flex;gap:10px"><span style="{{ legendSelf }}">● you</span><span style="{{ legendOther }}">● {{ oName }}</span></span></div>
+          <div style="display:flex;gap:3px">
+            <sc-for list="{{ strip }}" as="d" hint-placeholder-count="31"><div style="{{ d.cell }}"><span style="{{ d.a }}"></span><span style="{{ d.b }}"></span></div></sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:0 0 50%;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none" data-screen-label="Calendar">
+      <div style="padding:60px 16px 56px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div style="font-size:44px;font-weight:500;letter-spacing:-0.045em;line-height:.95">October</div>
+          <button onClick="{{ goToday }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:1px solid #2a2a2e;background:#161618;color:#c8c8cc;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:transform .15s" style-active="transform:scale(0.95)">← TODAY</button>
+        </div>
+        <p style="margin:0;font-size:19px;line-height:1.3;font-weight:500;letter-spacing:-0.01em;text-wrap:pretty">
+          <sc-for list="{{ calSummary }}" as="s" hint-placeholder-count="5"><span style="{{ s.st }}">{{ s.t }}</span></sc-for>
+        </p>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#55555a;text-align:center">
+            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+            <sc-for list="{{ cells }}" as="c" hint-placeholder-count="34">
+              <button onClick="{{ c.onClick }}" style="{{ c.style }}" style-active="transform:scale(0.94)">
+                <span style="{{ c.num }}">{{ c.label }}</span>
+                <span style="display:flex;gap:3px;justify-content:center">
+                  <span style="display:grid;grid-template-columns:repeat(3,4px);gap:1.5px"><sc-for list="{{ c.self }}" as="dt"><span style="{{ dt }}"></span></sc-for></span>
+                  <span style="display:grid;grid-template-columns:repeat(3,4px);gap:1.5px"><sc-for list="{{ c.other }}" as="dt"><span style="{{ dt }}"></span></sc-for></span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#161618;border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center">
+          <div style="display:grid;grid-template-columns:repeat(3,7px);gap:3px">
+            <span style="width:7px;height:7px;border-radius:50%;background:#f2f2f0"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span><span style="width:7px;height:7px;border-radius:50%;background:#44444a"></span>
+          </div>
+          <div style="font-family:'Geist Mono',monospace;font-size:10.5px;line-height:1.6;color:#8a8a90;letter-spacing:.02em">WATER · NO JUNK · SLEEP<br>GYM · STEPS · OUTSIDE<br>PHONE-FREE · GRATITUDE · READ</div>
+        </div>
+        <div style="background:#161618;border-radius:18px;padding:6px 16px;display:flex;flex-direction:column">
+          <div style="display:grid;grid-template-columns:1fr 64px 64px;padding:10px 0 4px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#55555a"><span></span><span style="text-align:right">YOU</span><span style="text-align:right;text-transform:uppercase">{{ oName }}</span></div>
+          <sc-for list="{{ counters }}" as="k" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:1fr 64px 64px;align-items:center;padding:10px 0;border-bottom:1px solid #222226;font-size:14px">
+              <span style="color:#c8c8cc">{{ k.name }}</span>
+              <span style="{{ k.sst }}">{{ k.s }}</span>
+              <span style="{{ k.ost }}">{{ k.o }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:6px;pointer-events:none">
+    <span style="{{ dot0 }}"></span><span style="{{ dot1 }}"></span>
+  </div>
+
+  <sc-if value="{{ sheetMounted }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSheet }}" style="{{ backdropStyle }}"></div>
+    <div data-noswipe="1" style="{{ sheetStyle }}" data-screen-label="Day detail">
+      <div style="display:flex;justify-content:center;padding:10px 0 4px"><span style="width:38px;height:4px;border-radius:2px;background:#3a3a3e"></span></div>
+      <div style="padding:8px 16px 36px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:52px;font-weight:500;letter-spacing:-0.045em;line-height:.9">{{ det.day }}</span>
+            <span style="font-size:20px;font-weight:500;letter-spacing:-0.02em;color:#55555a">{{ det.weekday }}</span>
+          </div>
+          <button onClick="{{ closeSheet }}" style="width:34px;height:34px;border-radius:50%;border:1px solid #2a2a2e;background:#1c1c1f;color:#c8c8cc;font-size:15px;cursor:pointer" style-active="transform:scale(0.92)">✕</button>
+        </div>
+        <div style="display:flex;gap:14px;font-family:'Geist Mono',monospace;font-size:11px"><span style="{{ legendSelf }}">● you {{ det.sDone }}/9</span><span style="{{ legendOther }}">● {{ oName }} {{ det.oDone }}/9</span><span style="margin-left:auto;color:#55555a">READ-ONLY</span></div>
+        <div style="background:#161618;border-radius:18px;padding:4px 16px">
+          <sc-for list="{{ det.rows }}" as="r" hint-placeholder-count="9">
+            <div style="display:grid;grid-template-columns:1fr 84px 84px;align-items:center;padding:10px 0;border-bottom:1px solid #222226">
+              <span style="font-size:14px;color:#c8c8cc">{{ r.name }}</span>
+              <span style="{{ r.s.st }}"><span style="{{ r.s.dot }}"></span>{{ r.s.t }}</span>
+              <span style="{{ r.o.st }}"><span style="{{ r.o.dot }}"></span>{{ r.o.t }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+          <div style="{{ det.sCard }}"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">YOU WROTE</span><span style="font-size:14px;line-height:1.4;text-wrap:pretty">{{ det.sNote }}</span></div>
+          <div style="{{ det.oCard }}"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90;text-transform:uppercase">{{ det.oWrote }}</span><span style="font-size:14px;line-height:1.4;text-wrap:pretty">{{ det.oNote }}</span></div>
+        </div>
+        <div style="background:#161618;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#8a8a90">GRATITUDE</span>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">
+            <div style="display:flex;flex-direction:column;gap:6px"><sc-for list="{{ det.sGrat }}" as="g" hint-placeholder-count="3"><span style="{{ g.st }}">{{ g.t }}</span></sc-for></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><sc-for list="{{ det.oGrat }}" as="g" hint-placeholder-count="3"><span style="{{ g.st }}">{{ g.t }}</span></sc-for></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;phone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mine&quot;,&quot;hers&quot;],&quot;default&quot;:&quot;mine&quot;,&quot;tsType&quot;:&quot;'mine'|'hers'&quot;,&quot;section&quot;:&quot;Perspective&quot;},&quot;swapColors&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Perspective&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normal&quot;,&quot;dayOne&quot;,&quot;otherNotLogged&quot;,&quot;allDone&quot;,&quot;cheatsUsed&quot;,&quot;night&quot;,&quot;lastDay&quot;,&quot;offline&quot;],&quot;default&quot;:&quot;normal&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Edge cases&quot;}}">
+const CORAL = 'oklch(0.74 0.13 40)', TEAL = 'oklch(0.76 0.1 190)';
+const MONO = "'Geist Mono', monospace";
+const WDS = ['THU', 'FRI', 'SAT', 'SUN', 'MON', 'TUE', 'WED'];
+const WDL = ['Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday'];
+const GOALS = ['Water', 'No junk', 'Sleep', 'Gym', 'Steps', 'Outside', 'Phone-free meals', 'Gratitude', 'Reading'];
+function rnd(d, w, g) { const x = Math.sin(d * 12.9898 + g * 78.233 + (w === 'b' ? 3.7 : 0)) * 43758.5453; return x - Math.floor(x); }
+const histMet = (d, w, g) => rnd(d, w, g) < (w === 'b' ? 0.72 : 0.64);
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const fr = (v, a, b) => clamp((v - a) / (b - a));
+const words = (t) => t.trim() ? t.trim().split(/\s+/).length : 0;
+const NOTES = {
+  a: ['Your hair looked unreal today. That is the whole note.', 'I stole one of your almonds. Sorry. Not sorry.', 'Tea is on the counter. Drink it warm this time.', 'Proud of you for skipping the samosa. I saw that.', 'You were right about the walk. I felt better after.'],
+  b: ['Water before coffee, mister.', 'You snore like a tiny tractor. Still like you.', 'Thank you for folding the laundry without being asked.', 'Early night tonight? I miss you on the couch.', 'Run with me tomorrow. Slow pace, promise.']
+};
+const GRAT = {
+  a: [['Rain on the window', 'Good dal at lunch', 'Her laugh'], ['A quiet commute', 'Finished the chapter', 'Cold water after the gym'], ['Mum called', 'Sunset on the terrace', 'Clean sheets']],
+  b: [['Morning light', 'A kind email', 'His bad jokes'], ['The long walk', 'Mango season', 'Slept straight through'], ['My sister', 'A good stretch', 'Quiet dinner together']]
+};
+
+function build(scn, self, other) {
+  const d = {
+    a: { water: 1.8, sleep: 7.5, outside: 14, steps: 6200, pages: 6, gym: true, run: false, junk: 'clean', meals: [true, true, false], grat: ['Slow coffee on the balcony', '', ''], note: 'Left the last mango for you. Eat it before I change my mind.' },
+    b: { water: 2.1, sleep: 8, outside: 20, steps: 4300, pages: 10, gym: true, run: true, junk: 'clean', meals: [true, false, false], grat: ['Sunlight at 7am', 'His terrible singing', ''], note: 'Proud of you for the run yesterday. Water first today, ok?' },
+    week: { a: { gym: 2, run: 1, pagesWk: 19, cheats: 1 }, b: { gym: 2, run: 1, pagesWk: 28, cheats: 0 } },
+    today: 15, logged: { a: true, b: true }, offline: false, night: false
+  };
+  const empty = { water: 0, sleep: 0, outside: 0, steps: 0, pages: 0, gym: false, run: false, junk: null, meals: [false, false, false], grat: ['', '', ''], note: '' };
+  if (scn === 'dayOne') {
+    d.today = 1; d.week = { a: { gym: 0, run: 0, pagesWk: 0, cheats: 0 }, b: { gym: 0, run: 0, pagesWk: 0, cheats: 0 } };
+    d[self] = { ...empty, water: 0.5, sleep: 7, steps: 800, junk: 'clean', meals: [true, false, false] };
+    d[other] = { ...empty }; d.logged[other] = false;
+  }
+  if (scn === 'otherNotLogged') { d[other] = { ...empty }; d.logged[other] = false; }
+  if (scn === 'allDone') d[self] = { ...d[self], water: 2.6, sleep: 7.5, outside: 24, steps: 10400, pages: 12, gym: true, run: true, junk: 'clean', meals: [true, true, true], grat: ['Slow coffee on the balcony', 'A clean PR at the gym', 'Dinner on the floor, no phones'] };
+  if (scn === 'cheatsUsed') d.week[self].cheats = 3;
+  if (scn === 'lastDay') { d.today = 31; d.week = { a: { gym: 3, run: 2, pagesWk: 40, cheats: 2 }, b: { gym: 4, run: 3, pagesWk: 44, cheats: 3 } }; }
+  if (scn === 'offline') d.offline = true;
+  if (scn === 'night') { d.night = true; d[self] = { ...d[self], water: 2.5, sleep: 7.5, outside: 22, steps: 10200, pages: 0, grat: ['', '', ''], meals: [true, true, true] }; }
+  return d;
+}
+
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  constructor(p) { super(p); this.state = { ...this.fresh(), pane: 0, dragX: null, drag: null, gx: 50, gy: 50, sheetDay: null, sheetOpen: false }; }
+  ids() { const self = (this.props.phone ?? 'mine') === 'hers' ? 'b' : 'a'; return { self, other: self === 'a' ? 'b' : 'a' }; }
+  fresh() { const { self, other } = this.ids(); return { d: build(this.props.scenario ?? 'normal', self, other) }; }
+  componentDidUpdate(pp) { if (pp.scenario !== this.props.scenario || pp.phone !== this.props.phone) this.setState({ ...this.fresh(), sheetDay: null, sheetOpen: false }); }
+  col(w) { const swap = !!this.props.swapColors; return (w === 'a') !== swap ? CORAL : TEAL; }
+
+  upd(patch) { const { self } = this.ids(); this.setState(s => ({ d: { ...s.d, [self]: { ...s.d[self], ...patch } } })); }
+  track(e, tile, move) {
+    e.preventDefault(); e.stopPropagation(); move(e);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); this.setState({ drag: null }); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }
+  gpos(ev, tile) { const r = tile.getBoundingClientRect(); return { gx: (ev.clientX - r.left) / r.width * 100, gy: (ev.clientY - r.top) / r.height * 100 }; }
+  scrub(key, min, max, step, axis) {
+    return (e) => {
+      const tile = e.currentTarget, ref = tile.querySelector('[data-ruler]') || tile;
+      this.track(e, tile, (ev) => {
+        const r = ref.getBoundingClientRect();
+        const f = clamp(axis === 'y' ? 1 - (ev.clientY - r.top) / r.height : (ev.clientX - r.left) / r.width);
+        const v = Math.round(Math.round((min + f * (max - min)) / step) * step * 100) / 100;
+        this.upd({ [key]: v }); this.setState({ drag: key, ...this.gpos(ev, tile) });
+      });
+    };
+  }
+  wheel() {
+    return (e) => {
+      const tile = e.currentTarget, y0 = e.clientY, { self } = this.ids(), v0 = this.state.d[self].pages;
+      this.track(e, tile, (ev) => {
+        this.upd({ pages: Math.max(0, Math.min(60, v0 + Math.round((y0 - ev.clientY) / 14))) });
+        this.setState({ drag: 'pages', ...this.gpos(ev, tile) });
+      });
+    };
+  }
+  glow(key, c) {
+    const on = this.state.drag === key;
+    return { position: 'absolute', inset: 0, pointerEvents: 'none', opacity: on ? 1 : 0, transition: on ? 'opacity .15s ease-out' : 'opacity .7s ease-out',
+      background: `radial-gradient(circle at ${this.state.gx}% ${this.state.gy}%, color-mix(in oklch, ${c} 70%, transparent) 0%, color-mix(in oklch, ${c} 22%, transparent) 30%, transparent 65%)` };
+  }
+  ticks(f, c, n, tgt) {
+    return Array.from({ length: n }, (_, i) => {
+      const x = i / (n - 1), isT = Math.abs(x - tgt) < 0.5 / (n - 1);
+      return { flex: 'none', width: isT ? 2 : 1.5, height: isT ? 22 : (i % 5 === 0 ? 14 : 8), borderRadius: 1, background: x <= f + 0.001 ? c : (isT ? '#8a8a90' : '#333337'), transition: 'background .12s' };
+    });
+  }
+  head(f) { return { position: 'absolute', left: `calc(${f * 100}% - 1px)`, bottom: -3, width: 2, height: 30, background: '#f2f2f0', borderRadius: 2, pointerEvents: 'none', transition: this.state.drag ? 'none' : 'left .3s ease' }; }
+  pill(label, on, c, onClick, disabled) {
+    return { label, onClick: disabled ? undefined : onClick, style: {
+      flex: 1, minWidth: 0, height: 40, borderRadius: 999, padding: '0 10px', fontFamily: 'Geist, system-ui, sans-serif', fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em',
+      background: on ? c : 'transparent', color: on ? '#0b0b0c' : '#c8c8cc', border: `1px solid ${on ? c : '#333337'}`, opacity: disabled ? 0.35 : 1,
+      cursor: disabled ? 'not-allowed' : 'pointer', transition: 'background .18s, color .18s, border-color .18s, transform .12s', whiteSpace: 'nowrap' } };
+  }
+  metList(p) { return [p.water >= 2.5, p.junk === 'clean', p.sleep >= 7, !!p.gym, p.steps >= 10000, p.outside >= 20, p.meals.every(Boolean), p.grat.every(g => g.trim()), p.pages >= 10]; }
+  done(p) { return this.metList(p).filter(Boolean).length; }
+
+  go(pane) { this.setState({ pane, dragX: null }); }
+  openSheet(day) { this.setState({ sheetDay: day, sheetOpen: false }); requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ sheetOpen: true }))); }
+  closeSheet() { this.setState({ sheetOpen: false }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ sheetDay: null }), 380); }
+
+  onSwipeDown(e) {
+    if (this.state.sheetDay || e.target.closest('[data-noswipe],button,input,textarea')) return;
+    const x0 = e.clientX, y0 = e.clientY, W = this.rootRef.current ? this.rootRef.current.clientWidth : 390;
+    let mode = null;
+    const move = (ev) => {
+      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      if (!mode) { if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) mode = 'x'; else if (Math.abs(dy) > 8) mode = 'y'; }
+      if (mode !== 'x') return;
+      const p = this.state.pane; let v = dx;
+      if ((p === 0 && dx > 0) || (p === 1 && dx < 0)) v = dx * 0.25;
+      this.setState({ dragX: Math.max(-W, Math.min(W, v)) });
+    };
+    const up = (ev) => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      if (mode !== 'x') return;
+      const dx = ev.clientX - x0, p = this.state.pane;
+      if (p === 0 && dx < -60) this.go(1); else if (p === 1 && dx > 60) this.go(0); else this.setState({ dragX: null });
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  }
+
+  renderVals() {
+    const s = this.state, D = s.d, { self, other } = this.ids();
+    const p = D[self], o = D[other], ol = D.logged[other], wk = D.week[self], owk = D.week[other];
+    const SC = this.col(self), OC = this.col(other);
+    const oName = other === 'b' ? 'her' : 'him', oSub = other === 'b' ? 'She' : 'He', oPos = other === 'b' ? 'her' : 'his';
+    const today = D.today;
+    const Dm = { color: '#6b6b70' }, Wt = { color: '#f2f2f0' }, Ot = { color: OC };
+    const oTxt = (v) => ol ? v : '—';
+
+    const n = this.done(p), on = this.done(o), left = Math.max(0, 2.5 - p.water);
+    const summary = [];
+    if (today === 1) summary.push({ t: 'Day one. ', st: Wt });
+    if (today === 31) summary.push({ t: 'Last day. ', st: Wt });
+    if (D.night) summary.push({ t: 'Evening check-in. ', st: Wt });
+    if (n === 9) summary.push({ t: 'All 9 closed', st: Wt }, { t: ', go be smug somewhere quiet', st: Dm });
+    else {
+      summary.push({ t: "You've closed ", st: Dm }, { t: `${n} of 9`, st: Wt });
+      if (D.night) {
+        const open = GOALS.filter((_, i) => !this.metList(p)[i]).map(g => g.toLowerCase());
+        summary.push({ t: '. Still open: ', st: Dm }, { t: open.join(', '), st: Wt });
+      } else if (left > 0.01) summary.push({ t: ', with ', st: Dm }, { t: `${left.toFixed(1)} L`, st: Wt }, { t: ' of water to go', st: Dm });
+    }
+    if (!ol) summary.push({ t: `. ${oSub} hasn't logged yet today`, st: Dm }, { t: ', a note might help.', st: Dm });
+    else {
+      const hl = o.pages >= 10 ? `read ${oPos} 10 pages` : o.outside >= 20 ? `had ${oPos} 20 minutes of sun` : o.water >= 2.5 ? `finished ${oPos} water` : null;
+      summary.push({ t: `. ${oSub}'s on `, st: Dm }, { t: `${on} of 9`, st: Ot });
+      if (hl) summary.push({ t: ' and has already ', st: Dm }, { t: hl, st: Ot });
+      summary.push({ t: '.', st: Dm });
+    }
+
+    const tint = (c) => ({ background: `color-mix(in oklch, ${c} 14%, #141416)`, borderRadius: 18, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, transition: 'background .3s' });
+    const wN = words(p.note);
+    const notes = {
+      fromCard: tint(OC), fromLabel: `From ${oName}`, fromMeta: o.note ? '8:12 am' : '',
+      fromText: o.note || `No note from ${oName} yet today.`, fromTextSt: { fontSize: 15, lineHeight: 1.4, textWrap: 'pretty', color: o.note ? '#f2f2f0' : '#6b6b70' },
+      toCard: tint(SC), toLabel: `Your note for ${oName}`, toText: p.note, toPh: `Leave ${oName} something small for today`,
+      toMeta: wN >= 100 ? '100/100 · limit' : `${wN}/100 words`, toMetaSt: { color: wN >= 90 ? SC : '#8a8a90' },
+      onChange: (e) => { const v = e.target.value; if (words(v) > 100) return; this.upd({ note: v }); }
+    };
+
+    const oBar = (f) => ({ height: '100%', width: `${ol ? f * 100 : 0}%`, background: OC, borderRadius: 2, transition: 'width .4s ease' });
+    const sl = fr(p.sleep, 4, 10), ou = fr(p.outside, 0, 40), st = fr(p.steps, 0, 15000);
+    const cheatsUsed = wk.cheats + (p.junk === 'cheat' ? 1 : 0), cheatsOut = wk.cheats >= 3 && p.junk !== 'cheat';
+    const gymWk = wk.gym + (p.gym ? 1 : 0), runWk = wk.run + (p.run ? 1 : 0);
+    const mealsN = p.meals.filter(Boolean).length, gratN = p.grat.filter(g => g.trim()).length;
+    const hiTile = (on) => ({ background: '#161618', borderRadius: 22, boxShadow: on ? `inset 0 0 0 1px ${SC}` : 'none', transition: 'box-shadow .3s' });
+    const wheel = [-2, -1, 0, 1, 2].map(k => {
+      const v = p.pages + k, a = Math.abs(k);
+      return { t: v < 0 ? ' ' : String(v).padStart(2, '0'), st: { display: 'block', height: a === 0 ? 46 : a === 1 ? 24 : 18, lineHeight: a === 0 ? '46px' : a === 1 ? '24px' : '18px', fontSize: a === 0 ? 42 : a === 1 ? 20 : 14, fontWeight: 500, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', color: a === 0 && p.pages >= 10 ? SC : '#f2f2f0', opacity: a === 0 ? 1 : a === 1 ? 0.35 : 0.12, filter: a === 2 ? 'blur(1px)' : 'none' } };
+    });
+    const t = {
+      water: { big: p.water.toFixed(1), down: this.scrub('water', 0, 3.5, 0.1, 'y'), glow: this.glow('water', SC),
+        fill: { position: 'absolute', left: 0, right: 0, bottom: 0, height: `${fr(p.water, 0, 3.5) * 100}%`, background: `color-mix(in oklch, ${SC} 24%, #161618)`, borderTop: `2px solid ${SC}`, transition: s.drag === 'water' ? 'none' : 'height .45s cubic-bezier(.2,.8,.2,1)' },
+        o: oTxt(`${o.water.toFixed(1)} L`), oBar: oBar(fr(o.water, 0, 2.5)) },
+      junk: { meta: cheatsOut ? 'no cheats left' : `cheats ${cheatsUsed}/3`, o: ol ? (o.junk === 'cheat' ? 'had a cheat meal' : 'clean so far') : '—',
+        pills: [this.pill('Clean', p.junk === 'clean', SC, () => this.upd({ junk: 'clean' })), this.pill('Cheat', p.junk === 'cheat', SC, () => this.upd({ junk: 'cheat' }), cheatsOut)] },
+      sleep: { big: String(p.sleep), down: this.scrub('sleep', 4, 10, 0.25), glow: this.glow('sleep', SC), ticks: this.ticks(sl, SC, 25, 0.5), head: this.head(sl), o: oTxt(`${o.sleep} hrs`) },
+      outside: { big: String(p.outside), down: this.scrub('outside', 0, 40, 1), glow: this.glow('outside', SC), ticks: this.ticks(ou, SC, 41, 0.5), head: this.head(ou), o: oTxt(`${o.outside} min`), oBar: oBar(fr(o.outside, 0, 40)) },
+      steps: { big: (p.steps / 1000).toFixed(1) + 'k', down: this.scrub('steps', 0, 15000, 100), glow: this.glow('steps', SC), ticks: this.ticks(st, SC, 16, 2 / 3), head: this.head(st), o: oTxt(`${(o.steps / 1000).toFixed(1)}k`) },
+      gym: { meta: gymWk >= 4 ? 'week done' : `${gymWk}/4 this wk`, sub: runWk >= 3 ? `runs ${runWk}/3 · done` : `runs ${runWk}/3 this wk`,
+        o: ol ? `${o.gym ? 'gym' : 'rest'}${o.run ? ' + run' : ''} · ${owk.gym + (o.gym ? 1 : 0)}/4` : '—',
+        pills: [this.pill('Gym', p.gym, SC, () => { const g = !p.gym; this.upd(g ? { gym: true } : { gym: false, run: false }); }), this.pill('Run', p.run, SC, () => { const r = !p.run; this.upd(r ? { run: true, gym: true } : { run: false }); })] },
+      meals: { meta: `${mealsN}/3`, o: oTxt(`${o.meals.filter(Boolean).length}/3 phone-free`),
+        pills: ['Breakfast', 'Lunch', 'Dinner'].map((m, i) => this.pill(m, p.meals[i], SC, () => { const a = [...p.meals]; a[i] = !a[i]; this.upd({ meals: a }); })) },
+      read: { meta: `${wk.pagesWk + p.pages}/50 wk`, wheel, down: this.wheel(), glow: this.glow('pages', SC), o: oTxt(`${o.pages} pages`),
+        tile: { ...hiTile(D.night && p.pages < 10), position: 'relative', overflow: 'hidden', touchAction: 'none', userSelect: 'none', cursor: 'ns-resize' } },
+      grat: { meta: `${gratN}/3`, o: oTxt(`${o.grat.filter(g => g.trim()).length}/3 written`),
+        tile: { ...hiTile(D.night && gratN < 3), padding: 14, display: 'flex', flexDirection: 'column', gap: 8 },
+        items: p.grat.map((g, i) => ({ n: '0' + (i + 1), v: g, onChange: (e) => { const a = [...p.grat]; a[i] = e.target.value; this.upd({ grat: a }); } })) }
+    };
+
+    const strip = Array.from({ length: 31 }, (_, i) => {
+      const d = i + 1; let fs = 0, fo = 0;
+      if (d < today) { for (let g = 0; g < 9; g++) { if (histMet(d, self, g)) fs++; if (histMet(d, other, g)) fo++; } fs /= 9; fo /= 9; }
+      else if (d === today) { fs = n / 9; fo = ol ? on / 9 : 0; }
+      const bar = (f, c) => ({ height: 3, width: `${f * 100}%`, background: c, borderRadius: 2, transition: 'width .4s ease' });
+      return { cell: { flex: 1, minWidth: 0, height: 32, borderRadius: 4, background: d > today ? '#111113' : '#1a1a1d', boxSizing: 'border-box', border: d === today ? '1px solid #f2f2f0' : '1px solid transparent', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 2, padding: '0 1.5px 3px' }, a: bar(fs, SC), b: bar(fo, OC) };
+    });
+
+    const dotSt = (ok, future, c) => ({ width: 4, height: 4, borderRadius: '50%', background: ok ? c : future ? 'transparent' : '#2c2c30', boxShadow: future ? 'inset 0 0 0 1px #26262a' : 'none' });
+    const todayMetS = this.metList(p), todayMetO = ol ? this.metList(o) : Array(9).fill(false);
+    const cells = [];
+    for (let i = 0; i < 3; i++) cells.push({ label: '', self: [], other: [], style: { visibility: 'hidden' }, num: {} });
+    for (let d = 1; d <= 31; d++) {
+      const future = d > today, isToday = d === today, isSel = d === s.sheetDay;
+      cells.push({
+        label: String(d),
+        onClick: future ? undefined : isToday ? () => this.go(0) : () => this.openSheet(d),
+        style: { height: 54, borderRadius: 10, border: `1px solid ${isSel ? '#f2f2f0' : isToday ? '#8a8a90' : 'transparent'}`, background: future ? '#0f0f11' : '#161618', padding: 6, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'stretch', cursor: future ? 'default' : 'pointer', boxSizing: 'border-box', minWidth: 0, transition: 'transform .12s, border-color .2s' },
+        num: { fontFamily: MONO, fontSize: 10.5, color: future ? '#3a3a3e' : isToday ? '#f2f2f0' : '#a0a0a6', textAlign: 'left', paddingLeft: 1 },
+        self: Array.from({ length: 9 }, (_, g) => dotSt(isToday ? todayMetS[g] : !future && histMet(d, self, g), future, SC)),
+        other: Array.from({ length: 9 }, (_, g) => dotSt(isToday ? todayMetO[g] : !future && histMet(d, other, g), future, OC))
+      });
+    }
+    let bothWater = 0;
+    for (let d = 1; d < today; d++) if (histMet(d, self, 0) && histMet(d, other, 0)) bothWater++;
+    const cheatsLeft = (3 - Math.min(3, cheatsUsed)) + (3 - owk.cheats);
+    let calSummary;
+    if (today === 1) calSummary = [{ t: 'Day one. ', st: Wt }, { t: 'The grid fills in as you both go. Nothing to catch up on.', st: Dm }];
+    else if (today === 31) calSummary = [{ t: 'Last day. ', st: Wt }, { t: 'You both kept water on ', st: Dm }, { t: `${bothWater} days`, st: Wt }, { t: '. One more and October is done.', st: Dm }];
+    else calSummary = [{ t: 'You both kept water on ', st: Dm }, { t: `${bothWater} days`, st: Wt }, { t: ', and there ', st: Dm }, { t: cheatsLeft === 1 ? 'is 1 cheat meal' : `are ${cheatsLeft} cheat meals`, st: Wt }, { t: ' left between you.', st: Dm }];
+    const cs = (c) => ({ fontFamily: MONO, fontSize: 13, color: c, textAlign: 'right' });
+    const counters = [
+      { name: 'Gym this week', s: `${gymWk}/4`, o: ol ? `${owk.gym + (o.gym ? 1 : 0)}/4` : `${owk.gym}/4` },
+      { name: 'Runs this week', s: `${runWk}/3`, o: `${owk.run + (ol && o.run ? 1 : 0)}/3` },
+      { name: 'Pages this week', s: `${wk.pagesWk + p.pages}/50`, o: `${owk.pagesWk + (ol ? o.pages : 0)}/50` },
+      { name: 'Cheat meals', s: `${Math.min(3, cheatsUsed)}/3`, o: `${owk.cheats}/3` }
+    ].map(k => ({ ...k, sst: cs(SC), ost: cs(OC) }));
+
+    let det = { rows: [], sGrat: [], oGrat: [] };
+    if (s.sheetDay) {
+      const d = s.sheetDay;
+      const val = (g, ok, w) => {
+        const r = rnd(d, w, g + 20);
+        switch (g) {
+          case 0: return ok ? `${(2.5 + r * 0.5).toFixed(1)} L` : `${(1.2 + r * 1.1).toFixed(1)} L`;
+          case 1: return ok ? 'clean' : 'cheat';
+          case 2: return ok ? `${7 + Math.round(r * 4) * 0.25} h` : `${5.5 + Math.round(r * 5) * 0.25} h`;
+          case 3: return ok ? (r > 0.4 ? 'gym + run' : 'gym') : 'rest';
+          case 4: return ok ? `${(10 + r * 3).toFixed(1)}k` : `${(4 + r * 5).toFixed(1)}k`;
+          case 5: return ok ? `${20 + Math.round(r * 25)} min` : `${Math.round(r * 18)} min`;
+          case 6: return ok ? '3/3' : `${1 + Math.round(r)}/3`;
+          case 7: return ok ? '3/3' : `${Math.round(r * 2)}/3`;
+          default: return ok ? `${10 + Math.round(r * 12)} pp` : `${Math.round(r * 8)} pp`;
+        }
+      };
+      const cv = (g, w, c) => { const ok = histMet(d, w, g); return { t: val(g, ok, w),
+        st: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, fontFamily: MONO, fontSize: 12.5, color: ok ? c : '#6b6b70' },
+        dot: { width: 6, height: 6, borderRadius: '50%', flex: 'none', background: ok ? c : 'transparent', boxShadow: ok ? 'none' : 'inset 0 0 0 1px #44444a' } }; };
+      const cnt = (w) => GOALS.filter((_, g) => histMet(d, w, g)).length;
+      const gl = (arr, c) => arr.map(x => ({ t: x, st: { fontSize: 13.5, lineHeight: 1.35, color: '#f2f2f0', borderLeft: `2px solid ${c}`, paddingLeft: 8 } }));
+      det = {
+        day: d, weekday: WDL[(d - 1) % 7], sDone: cnt(self), oDone: cnt(other),
+        rows: GOALS.map((name, g) => ({ name, s: cv(g, self, SC), o: cv(g, other, OC) })),
+        sNote: NOTES[self][d % 5], oNote: NOTES[other][(d + 2) % 5], oWrote: `${oSub} wrote`,
+        sCard: { ...tint(SC), padding: 14 }, oCard: { ...tint(OC), padding: 14 },
+        sGrat: gl(GRAT[self][d % 3], SC), oGrat: gl(GRAT[other][(d + 1) % 3], OC)
+      };
+    }
+
+    const pct = s.pane * 50;
+    const dx = s.dragX || 0;
+    const pd = (on) => ({ width: on ? 16 : 6, height: 6, borderRadius: 3, background: on ? '#f2f2f0' : '#3a3a3e', transition: 'all .3s ease' });
+    const open = s.sheetOpen;
+    return {
+      rootRef: this.rootRef,
+      onSwipeDown: (e) => this.onSwipeDown(e),
+      trackStyle: { display: 'flex', width: '200%', height: '100%', transform: `translateX(calc(${-pct}% + ${dx}px))`, transition: s.dragX != null ? 'none' : 'transform .5s cubic-bezier(.2,.8,.2,1)', touchAction: 'pan-y' },
+      goCalendar: () => this.go(1), goToday: () => this.go(0),
+      dot0: pd(s.pane === 0), dot1: pd(s.pane === 1),
+      dayNum: String(today).padStart(2, '0'), dateTag: `${WDS[(today - 1) % 7]} · OCT ${today}${D.night ? ' · 9:40 PM' : ''}`,
+      offline: D.offline, summary, notes, t, strip, oName,
+      ot: { display: 'flex', alignItems: 'center', gap: 6, fontFamily: MONO, fontSize: 11, color: ol ? OC : '#55555a' },
+      otc: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: MONO, fontSize: 11, color: ol ? OC : '#55555a', marginTop: 4 },
+      od: { width: 6, height: 6, borderRadius: '50%', flex: 'none', background: ol ? OC : 'transparent', boxShadow: ol ? 'none' : `inset 0 0 0 1px ${OC}` },
+      legendSelf: { color: SC }, legendOther: { color: OC },
+      cells, calSummary, counters, det,
+      sheetMounted: s.sheetDay != null,
+      closeSheet: () => this.closeSheet(),
+      backdropStyle: { position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', opacity: open ? 1 : 0, transition: 'opacity .35s ease', zIndex: 5 },
+      sheetStyle: { position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '88%', overflowY: 'auto', scrollbarWidth: 'none', background: '#111113', borderRadius: '28px 28px 0 0', boxShadow: '0 -1px 0 #26262a', transform: open ? 'translateY(0)' : 'translateY(100%)', transition: 'transform .42s cubic-bezier(.2,.8,.2,1)', zIndex: 6 }
+    };
+  }
+}
+</script>
+</body>
+</html>

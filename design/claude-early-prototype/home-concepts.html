@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>October Home Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:oklch(96.5% 0.008 75);
+  --panel:oklch(99% 0.004 75);
+  --ink:oklch(24% 0.012 60);
+  --muted:oklch(52% 0.012 60);
+  --faint:oklch(88% 0.01 70);
+  --line:oklch(91% 0.008 70);
+  --me:oklch(60% 0.13 42);
+  --me-soft:oklch(90% 0.04 42);
+  --them:oklch(55% 0.06 195);
+  --them-soft:oklch(90% 0.025 195);
+  --frame:oklch(22% 0.01 60);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:oklch(18% 0.008 60);
+    --panel:oklch(22% 0.01 60);
+    --ink:oklch(93% 0.01 75);
+    --muted:oklch(68% 0.012 70);
+    --faint:oklch(34% 0.012 60);
+    --line:oklch(29% 0.01 60);
+    --me:oklch(70% 0.12 45);
+    --me-soft:oklch(34% 0.05 42);
+    --them:oklch(70% 0.06 195);
+    --them-soft:oklch(32% 0.03 195);
+    --frame:oklch(40% 0.01 60);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 Onest,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+header.page{max-width:1100px;margin:0 auto;padding:28px 16px 8px}
+header.page h1{font:italic 500 30px/1.1 Newsreader,serif;margin:0 0 6px}
+header.page p{margin:0;color:var(--muted);max-width:62ch}
+nav.tabs{max-width:1100px;margin:18px auto 0;padding:0 16px;display:flex;gap:6px;flex-wrap:wrap}
+nav.tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{max-width:1100px;margin:0 auto;padding:22px 16px 60px;display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap}
+.phone{width:min(375px,100%);height:760px;border:10px solid var(--frame);border-radius:44px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column;flex-shrink:0}
+.screen{flex:1;overflow-y:auto;padding:22px 20px 28px}
+.notes{flex:1;min-width:260px;max-width:420px}
+.notes h2{font:italic 500 24px/1.2 Newsreader,serif;margin:6px 0 10px}
+.notes p,.notes li{color:var(--muted)}
+.notes ul{padding-left:18px}
+.notes .reset{margin-top:14px;font:inherit;background:none;border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer}
+
+/* shared bits */
+.date{font:italic 500 28px/1.1 Newsreader,serif;margin:0}
+.dayof{color:var(--muted);font-size:13px;margin-top:4px}
+.label-sm{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:26px 0 10px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.check{width:28px;height:28px;border-radius:50%;border:2px solid var(--faint);background:none;flex-shrink:0;cursor:pointer;display:grid;place-items:center;padding:0;transition:background .25s cubic-bezier(.25,1,.5,1),border-color .25s}
+.check.on{background:var(--me);border-color:var(--me)}
+.check.on::after{content:"";width:9px;height:5px;border:2px solid var(--panel);border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.row .txt{flex:1;min-width:0}
+.row .name{font-weight:500}
+.row .meta{font-size:12.5px;color:var(--muted)}
+.chip{font:inherit;font-size:12.5px;border:1px solid var(--line);background:none;color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--me-soft);border-color:transparent}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink);font:inherit;cursor:pointer}
+.stepper span{min-width:26px;text-align:center;font-variant-numeric:tabular-nums;font-weight:500}
+.grat{padding:0 0 12px 42px;display:grid;gap:6px}
+.grat input{font:inherit;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);padding:6px 0}
+.grat input:focus{outline:none;border-color:var(--me)}
+.dots{display:flex;gap:7px;align-items:center}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--faint)}
+.dot.them{background:var(--them)}
+.dot.me{background:var(--me)}
+.mirror{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:14px;background:var(--them-soft);cursor:pointer;border:0;width:100%;font:inherit;color:var(--ink);text-align:left}
+.mirror .who{font-weight:500}
+.strip{display:grid;grid-template-columns:repeat(31,1fr);gap:3px}
+.strip i{aspect-ratio:1/2.2;border-radius:3px;background:var(--faint)}
+.strip i.today{outline:2px solid var(--ink);outline-offset:1px}
+
+/* B table */
+.daynav{display:flex;align-items:center;justify-content:space-between}
+.daynav button{font:inherit;font-size:20px;background:none;border:0;color:var(--ink);cursor:pointer;padding:4px 10px}
+.daystrip{display:flex;gap:6px;overflow-x:auto;margin:14px -20px 4px;padding:0 20px 6px;scrollbar-width:none}
+.daystrip button{flex-shrink:0;width:36px;height:44px;border-radius:10px;border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+.daystrip button.sel{background:var(--ink);color:var(--bg)}
+.daystrip button:disabled{opacity:.35;cursor:default}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 0;text-align:center}
+th:first-child{text-align:left}
+td{padding:9px 0;border-bottom:1px solid var(--line);text-align:center}
+td:first-child{text-align:left;font-weight:500}
+td .check{margin:0 auto}
+td .cell-them{width:28px;height:28px;border-radius:50%;margin:0 auto;border:2px solid var(--faint)}
+td .cell-them.on{background:var(--them);border-color:var(--them)}
+td .num{font-variant-numeric:tabular-nums;font-size:13px}
+td.num-me{color:var(--me);font-weight:600}
+td.num-them{color:var(--them);font-weight:600}
+
+/* C quilt */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px}
+.cal .wd{font-size:11px;color:var(--muted);text-align:center;font-weight:600}
+.tile{aspect-ratio:1/1.25;border-radius:10px;border:0;background:var(--bg);padding:5px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;font:inherit;color:var(--ink)}
+.tile:disabled{cursor:default;opacity:.45}
+.tile.sel{outline:2px solid var(--ink)}
+.tile .n{font-size:11px;font-weight:600;text-align:left}
+.bars{display:grid;gap:3px}
+.bar{height:5px;border-radius:3px;background:var(--faint);overflow:hidden}
+.bar b{display:block;height:100%}
+.bar.me b{background:var(--me)}
+.bar.them b{background:var(--them)}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin-top:4px}
+.legend span::before{content:"";display:inline-block;width:10px;height:5px;border-radius:3px;margin-right:6px;vertical-align:middle;background:var(--me)}
+.legend span.t::before{background:var(--them)}
+.cheatline{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+
+/* Mix bottom nav */
+.botnav{display:flex;border-top:1px solid var(--line);background:var(--panel)}
+.botnav button{flex:1;font:inherit;font-size:12.5px;font-weight:500;background:none;border:0;color:var(--muted);padding:12px 0 16px;cursor:pointer}
+.botnav button.sel{color:var(--ink)}
+.botnav button.sel::before{content:"";display:block;width:5px;height:5px;border-radius:50%;background:var(--me);margin:0 auto 4px}
+.botnav button:not(.sel)::before{content:"";display:block;height:5px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Project October: home screen concepts</h1>
+  <p>This is a prototype for structure only, not the final look. Everything is live and shared: tick something in one concept and the others update. "Today" is set to Sun 4 Oct, and the partner's data is sample data.</p>
+</header>
+<nav class="tabs" role="tablist" id="tabs"></nav>
+<main>
+  <div class="phone"><div class="screen" id="screen"></div><div id="bot"></div></div>
+  <section class="notes" id="notes"></section>
+</main>
+
+<script>
+const TODAY = 4, DAYS = 31;
+const GOALS = [
+  {id:'water',  name:'Water 2.5 L',      meta:'black coffee ok, no sugar'},
+  {id:'junk',   name:'No junk'},
+  {id:'sleep',  name:'Sleep 7-8 h'},
+  {id:'gym',    name:'Gym'},
+  {id:'steps',  name:'10k steps'},
+  {id:'outside',name:'20 min outside'},
+  {id:'phone',  name:'Phone-free meals'},
+  {id:'grat',   name:'Gratitude', meta:'3 things tonight'},
+  {id:'read',   name:'Read', meta:'10 pages'},
+];
+const PARTNER = 'Partner';
+
+function blankDay(){return {water:false,junk:false,sleep:false,gym:false,run:false,steps:false,outside:false,phone:false,grat:['','',''],pages:0,cheat:0}}
+function seed(){
+  const s = {me:{}, them:{}};
+  for(let d=1; d<=DAYS; d++){ s.me[d]=blankDay(); s.them[d]=blankDay(); }
+  const fill=(p,d,o)=>Object.assign(s[p][d],o);
+  fill('me',1,{water:true,junk:true,sleep:true,gym:true,run:true,steps:true,outside:true,phone:false,grat:['a','b','c'],pages:12});
+  fill('me',2,{water:true,junk:false,cheat:1,sleep:false,steps:true,outside:true,phone:true,grat:['a','b','c'],pages:10});
+  fill('me',3,{water:true,junk:true,sleep:true,gym:true,steps:false,outside:false,phone:true,pages:0});
+  fill('me',4,{water:true,outside:true,pages:4});
+  fill('them',1,{water:true,junk:true,sleep:true,gym:true,run:true,steps:true,outside:true,phone:true,grat:['a','b','c'],pages:15});
+  fill('them',2,{water:true,junk:true,sleep:true,steps:true,outside:false,phone:true,grat:['a','b','c'],pages:10});
+  fill('them',3,{water:true,junk:true,sleep:true,gym:true,run:true,steps:true,outside:true,phone:false,grat:['a','b','c'],pages:20});
+  fill('them',4,{water:true,junk:true,sleep:true,steps:true,pages:10});
+  return s;
+}
+let S = seed();
+let view = 'A', selDay = TODAY, mixTab = 'today';
+
+const weekOf = d => Math.min(3, Math.floor((d-1)/7));
+const weekDays = d => { const w=weekOf(d), a=w*7+1, b=w===3?31:a+6; return [a,b]; };
+function isDone(p,d,g){
+  const x=S[p][d];
+  if(g==='grat') return x.grat.every(t=>t.trim());
+  if(g==='read') return x.pages>=10;
+  if(g==='junk') return x.junk || x.cheat>0;
+  return !!x[g];
+}
+const frac = (p,d) => GOALS.filter(g=>isDone(p,d,g.id)).length / GOALS.length;
+function weekSum(p,d,fn){ const [a,b]=weekDays(d); let n=0; for(let i=a;i<=Math.min(b,TODAY);i++) n+=fn(S[p][i]); return n; }
+const gymWk  = (p,d)=>weekSum(p,d,x=>x.gym?1:0);
+const runWk  = (p,d)=>weekSum(p,d,x=>x.run?1:0);
+const readWk = (p,d)=>weekSum(p,d,x=>x.pages);
+const cheats = p => { let n=0; for(let i=1;i<=TODAY;i++) n+=S[p][i].cheat; return n; };
+const dateLabel = d => new Date(2026,9,d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+
+function act(fn){ fn(); render(); }
+
+/* --- building blocks --- */
+function checklist(d){
+  const x=S.me[d];
+  return GOALS.map(g=>{
+    const on=isDone('me',d,g.id);
+    let meta=g.meta||'', right='';
+    if(g.id==='gym'){ meta=`${gymWk('me',d)}/4 this week · runs ${runWk('me',d)}/3`;
+      right=`<button class="chip ${x.run?'on':''}" data-run="${d}">ran</button>`; }
+    if(g.id==='junk'){ meta=`cheat meals ${cheats('me')}/3 this month`;
+      right=`<button class="chip" data-cheat="${d}">+ cheat</button>`; }
+    if(g.id==='read'){ meta=`${readWk('me',d)}/50 pages this week`;
+      right=`<div class="stepper"><button data-pg="${d}" data-v="-5" aria-label="minus 5 pages">−</button><span>${x.pages}</span><button data-pg="${d}" data-v="5" aria-label="plus 5 pages">+</button></div>`; }
+    const btn = (g.id==='read'||g.id==='grat')
+      ? `<span class="check ${on?'on':''}" aria-hidden="true"></span>`
+      : `<button class="check ${on?'on':''}" data-t="${g.id}" data-d="${d}" aria-label="${g.name}"></button>`;
+    let row=`<div class="row">${btn}<div class="txt"><div class="name">${g.name}</div>${meta?`<div class="meta">${meta}</div>`:''}</div>${right}</div>`;
+    if(g.id==='grat') row+=`<div class="grat">${x.grat.map((t,i)=>`<input data-g="${d}" data-i="${i}" value="${t.replace(/"/g,'&quot;')}" placeholder="${i+1}. something good">`).join('')}</div>`;
+    return row;
+  }).join('');
+}
+function monthStrip(p){
+  return `<div class="strip">${Array.from({length:DAYS},(_,i)=>{const d=i+1;
+    const f=d<=TODAY?frac(p,d):0;
+    const bg=d<=TODAY?`background:color-mix(in oklch, var(--${p}) ${Math.round(f*100)}%, var(--faint))`:'';
+    return `<i class="${d===TODAY?'today':''}" style="${bg}"></i>`}).join('')}</div>`;
+}
+
+/* --- concept A: today + mirror --- */
+function viewA(onMirror){
+  const dots=GOALS.map(g=>`<span class="dot ${isDone('them',TODAY,g.id)?'them':''}" title="${g.name}"></span>`).join('');
+  const n=GOALS.filter(g=>isDone('them',TODAY,g.id)).length;
+  return `<p class="date">${dateLabel(TODAY)}</p><div class="dayof">day ${TODAY} of 31</div>
+  <div class="label-sm">My day</div>${checklist(TODAY)}
+  <div class="label-sm">${PARTNER} today</div>
+  <button class="mirror" data-mirror="1"><div><div class="who">${n} of 9</div><div class="dots" style="margin-top:8px">${dots}</div></div><span aria-hidden="true">›</span></button>
+  <div class="label-sm">October</div>${monthStrip('me')}`;
+}
+
+/* --- concept B: side by side --- */
+function viewB(){
+  const d=selDay, y=S.me[d], t=S.them[d];
+  const strip=Array.from({length:DAYS},(_,i)=>{const n=i+1;return `<button class="${n===d?'sel':''}" ${n>TODAY?'disabled':''} data-day="${n}">${n}</button>`}).join('');
+  const rows=GOALS.map(g=>{
+    if(g.id==='gym') return `<tr><td>Gym <span class="meta">(wk)</span></td><td class="num-me"><button class="check ${y.gym?'on':''}" data-t="gym" data-d="${d}" aria-label="Gym"></button></td><td class="num-them"><div class="cell-them ${t.gym?'on':''}"></div></td></tr>
+      <tr><td style="font-weight:400;color:var(--muted);font-size:13px;padding-top:0">this week · runs</td><td class="num-me num" style="padding-top:0">${gymWk('me',d)}/4 · ${runWk('me',d)}/3</td><td class="num-them num" style="padding-top:0">${gymWk('them',d)}/4 · ${runWk('them',d)}/3</td></tr>`;
+    if(g.id==='read') return `<tr><td>Read <span class="meta">(wk)</span></td><td class="num-me num">${readWk('me',d)}/50</td><td class="num-them num">${readWk('them',d)}/50</td></tr>`;
+    const me = g.id==='grat' ? `<span class="check ${isDone('me',d,'grat')?'on':''}" style="margin:0 auto"></span>` : `<button class="check ${isDone('me',d,g.id)?'on':''}" data-t="${g.id}" data-d="${d}" aria-label="${g.name}"></button>`;
+    return `<tr><td>${g.name}</td><td>${me}</td><td><div class="cell-them ${isDone('them',d,g.id)?'on':''}"></div></td></tr>`;
+  }).join('');
+  return `<div class="daynav"><button data-day="${Math.max(1,d-1)}" aria-label="previous day">‹</button><p class="date" style="font-size:24px">${dateLabel(d)}</p><button data-day="${Math.min(TODAY,d+1)}" aria-label="next day">›</button></div>
+  <div class="daystrip">${strip}</div>
+  <table><thead><tr><th></th><th style="color:var(--me)">You</th><th style="color:var(--them)">${PARTNER}</th></tr></thead><tbody>${rows}
+  <tr><td>Cheat meals</td><td class="num-me num">${cheats('me')}/3</td><td class="num-them num">${cheats('them')}/3</td></tr></tbody></table>`;
+}
+
+/* --- concept C: month quilt --- */
+function viewC(){
+  const lead=(new Date(2026,9,1).getDay()+6)%7;
+  let cells=['M','T','W','T','F','S','S'].map(w=>`<div class="wd">${w}</div>`).join('');
+  cells+=Array.from({length:lead},()=>'<div></div>').join('');
+  for(let d=1;d<=DAYS;d++){
+    const past=d<=TODAY;
+    cells+=`<button class="tile ${d===selDay?'sel':''}" ${past?'':'disabled'} data-day="${d}"><span class="n">${d}</span><span class="bars">
+      <span class="bar me"><b style="width:${past?frac('me',d)*100:0}%"></b></span>
+      <span class="bar them"><b style="width:${past?frac('them',d)*100:0}%"></b></span></span></button>`;
+  }
+  return `<p class="date">October</p><div class="legend"><span>you</span><span class="t">${PARTNER}</span></div>
+  <div class="cal">${cells}</div>
+  <div class="cheatline"><span>cheat meals</span><span>you ${cheats('me')}/3 · ${PARTNER.toLowerCase()} ${cheats('them')}/3</span></div>
+  <div class="label-sm">${dateLabel(selDay)}</div>${checklist(selDay)}`;
+}
+
+/* --- mix: A home, B via mirror, C tab --- */
+function viewMix(){
+  if(mixTab==='us') return viewB();
+  if(mixTab==='month') return viewC();
+  return viewA();
+}
+
+const VIEWS = {
+  A:{tab:'A · Today + mirror', title:'Today + mirror', html:viewA, notes:`<ul><li>Your checklist is the whole screen, and ticking is one tap.</li><li>Your partner is a calm strip of dots. Tap it to see their day (it opens concept B).</li><li>The October strip darkens as each day fills in.</li></ul><p>Best for quick taps during the day.</p>`},
+  B:{tab:'B · Side by side', title:'Side by side', html:viewB, notes:`<ul><li>One table with You and ${PARTNER} next to each other. Your cells are tappable, theirs are read-only.</li><li>Swipe the numbers to look back at any day.</li><li>Weekly counts (gym, runs, pages) and cheat meals sit inline.</li></ul><p>Best for the evening close-out together. Gratitude and pages can't be logged from here.</p>`},
+  C:{tab:'C · Month quilt', title:'Month quilt', html:viewC, notes:`<ul><li>October is a calendar. Each day has two bars that fill up, one for you and one for ${PARTNER.toLowerCase()}.</li><li>Tap any day and its checklist opens below.</li></ul><p>Best for seeing the pattern grow. Logging today takes one more tap.</p>`},
+  M:{tab:'Mix · A + B + C', title:'Mix: all three as tabs', html:viewMix, notes:`<ul><li><b>Today</b> (A) is home, for quick taps.</li><li><b>Us</b> (B) is the side-by-side, also opened by tapping ${PARTNER.toLowerCase()}'s strip.</li><li><b>Month</b> (C) is the quilt, for the evening look-back.</li></ul><p>Covers all three moments, with one bottom nav.</p>`},
+};
+
+function render(){
+  document.getElementById('tabs').innerHTML = Object.entries(VIEWS).map(([k,v])=>`<button role="tab" aria-selected="${k===view}" data-view="${k}">${v.tab}</button>`).join('');
+  const sc=document.getElementById('screen'), top=sc.scrollTop;
+  sc.innerHTML = VIEWS[view].html();
+  sc.scrollTop = top;
+  document.getElementById('bot').innerHTML = view==='M'
+    ? `<div class="botnav">${[['today','Today'],['us','Us'],['month','Month']].map(([k,l])=>`<button class="${k===mixTab?'sel':''}" data-mix="${k}">${l}</button>`).join('')}</div>` : '';
+  document.getElementById('notes').innerHTML = `<h2>${VIEWS[view].title}</h2>${VIEWS[view].notes}<button class="reset" data-reset="1">Reset sample data</button>`;
+}
+
+document.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const ds=b.dataset;
+  if(ds.view) act(()=>{view=ds.view; selDay=TODAY; mixTab='today'; document.getElementById('screen').scrollTop=0;});
+  else if(ds.t) act(()=>{const x=S.me[+ds.d]; if(ds.t==='junk'){x.junk=!x.junk; if(!x.junk) x.cheat=0;} else x[ds.t]=!x[ds.t]; if(ds.t==='gym'&&!x.gym) x.run=false;});
+  else if(ds.run) act(()=>{const x=S.me[+ds.run]; x.run=!x.run; if(x.run) x.gym=true;});
+  else if(ds.cheat) act(()=>{ if(cheats('me')<3) S.me[+ds.cheat].cheat++; });
+  else if(ds.pg) act(()=>{const x=S.me[+ds.pg]; x.pages=Math.max(0,x.pages+ +ds.v);});
+  else if(ds.day) act(()=>{selDay=+ds.day;});
+  else if(ds.mirror) act(()=>{ if(view==='M'){mixTab='us';} else {view='B';} selDay=TODAY; document.getElementById('screen').scrollTop=0;});
+  else if(ds.mix) act(()=>{mixTab=ds.mix; selDay=TODAY; document.getElementById('screen').scrollTop=0;});
+  else if(ds.reset) act(()=>{S=seed();});
+});
+document.addEventListener('change', e=>{
+  const i=e.target; if(i.dataset.g) act(()=>{S.me[+i.dataset.g].grat[+i.dataset.i]=i.value;});
+});
+render();
+</script>
+</body>
+</html>

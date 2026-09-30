@@ -1,0 +1,19 @@
+rules_version = '2';
+// Replace A_EMAIL and B_EMAIL with the two Google accounts (same as config.js), then publish these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function email() { return request.auth.token.email.lower(); }
+    function isA() { return request.auth != null && request.auth.token.email_verified && email() == 'A_EMAIL'; }
+    function isB() { return request.auth != null && request.auth.token.email_verified && email() == 'B_EMAIL'; }
+    function member() { return isA() || isB(); }
+
+    match /couples/{couple} {
+      allow read, write: if member();
+      // each person can read both logs but only write their own days
+      match /entries/{id} {
+        allow read: if member();
+        allow write: if (isA() && id.matches('a_[0-9]+')) || (isB() && id.matches('b_[0-9]+'));
+      }
+    }
+  }
+}
