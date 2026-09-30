@@ -12,8 +12,8 @@ window.OCTOBER_CONFIG = {
     appId: '1:795542222825:web:2579cc4b88922168687d78'
   },
   people: {
-    a: '', // "him": coral by default
-    b: ''  // "her": teal by default
+    a: '5dbc1194c40720921a947902ee744e925b85f31e4226588b9b45654473d5bb10', // "him": coral by default
+    b: '84338b649bf35587b2c948d363485928890285a364e5a7b04d0aab517d599cd3'  // "her": teal by default
   },
   coupleId: 'october-2026'
 };

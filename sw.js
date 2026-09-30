@@ -1,5 +1,5 @@
 // Offline shell: app files cache-first (refreshed in the background), fonts and the Firebase SDK cached on first use.
-const V = 'october-v3'; // bump on every release so phones pick up the new files
+const V = 'october-v4'; // bump on every release so phones pick up the new files
 const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'store.js', 'config.js', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
