@@ -76,15 +76,17 @@ export function createStore(cfg, onChange) {
     const col = fs.collection(couple, 'entries');
     let unsub = [];
 
+    // config holds SHA-256 hashes of the two emails (the repo is public); plain emails also work
     const people = { a: (cfg.people.a || '').toLowerCase(), b: (cfg.people.b || '').toLowerCase() };
+    const sha = async (t) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))).map(x => x.toString(16).padStart(2, '0')).join('');
     auth.getRedirectResult(fauth).catch(e => { s.authError = e.code || String(e); onChange(); });
 
-    auth.onAuthStateChanged(fauth, (user) => {
+    auth.onAuthStateChanged(fauth, async (user) => {
       unsub.forEach(u => u()); unsub = [];
       if (!user) { s.auth = 'signin'; s.email = null; onChange(); return; }
-      const email = (user.email || '').toLowerCase();
+      const email = (user.email || '').toLowerCase(), h = await sha(email);
       s.email = email;
-      const role = email === people.a ? 'a' : email === people.b ? 'b' : null;
+      const role = (email === people.a || h === people.a) ? 'a' : (email === people.b || h === people.b) ? 'b' : null;
       if (!role) { s.auth = 'denied'; onChange(); return; }
       if (s.role !== role) { s.role = role; }
       s.auth = 'ready'; saveCache(); onChange();

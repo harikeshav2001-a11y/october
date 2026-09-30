@@ -35,6 +35,6 @@ Weeks run Monday–Sunday; cheat meals are counted over the month.
 3. Authentication → Settings → Authorized domains → add `<github-user>.github.io`.
 4. Build → Firestore Database → Create database (production mode, nearest region).
 5. Firestore → Rules: paste `firestore.rules` with the two emails filled in → Publish.
-6. Project settings → Your apps → Web (`</>`) → register → copy the config into `config.js`, fill `people.a` (him) and `people.b` (her).
+6. Project settings → Your apps → Web (`</>`) → register → copy the config into `config.js`. Fill `people.a` (him) and `people.b` (her) with the SHA-256 hex of each lowercase email: `python -c "import hashlib;print(hashlib.sha256(b'name@gmail.com').hexdigest())"`. The repo is public, so never commit the plain emails.
 
 The web API key in `config.js` is meant to be public; access is controlled by the rules.
