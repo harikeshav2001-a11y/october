@@ -1,4 +1,4 @@
-import { createStore, emptyEntry, metList, doneCount } from './store.js';
+import { createStore, emptyEntry, metList, doneCount, PRACTICE, PRACTICE_DAY } from './store.js';
 
 const cfg = window.OCTOBER_CONFIG || { firebase: null, people: { a: '', b: '' }, coupleId: 'october-2026' };
 const root = document.getElementById('app');
@@ -35,7 +35,10 @@ const S = store.s;
 function now() {
   if (S.demoNow) return S.demoNow;
   const q = new URLSearchParams(location.search).get('now');
-  return q ? new Date(q) : new Date();
+  if (q) return new Date(q);
+  const d = new Date();
+  // practice runs on a pretend mid-October day at the real time of day (so night mode still shows up at night)
+  return PRACTICE ? new Date(2026, 9, PRACTICE_DAY, d.getHours(), d.getMinutes()) : d;
 }
 function octDay(dt) {
   const y = dt.getFullYear(), m = dt.getMonth();
@@ -45,6 +48,8 @@ function octDay(dt) {
 }
 const wd = (d) => new Date(2026, 9, d).getDay();
 const weekStart = (d) => Math.max(1, d - (wd(d) + 6) % 7);
+// Oct 1–4 (Thu–Sun) is a short warm-up week: weekly targets are shown as plain counts
+const isWarmup = (d) => weekStart(Math.min(d, 31)) === 1 && wd(1) !== 1;
 const E = (w, d) => store.entry(w, d);
 const P = (w, d) => E(w, d) || emptyEntry();
 function weekSum(w, t, f) { let n = 0; for (let d = weekStart(t); d <= t; d++) { const e = E(w, d); if (e) n += f(e); } return n; }
@@ -63,15 +68,27 @@ function glow(key, c) {
   const on = ui.drag === key;
   return `<div class="glow" style="position:absolute;inset:0;pointer-events:none;opacity:${on ? 1 : 0};transition:${on ? 'opacity .15s ease-out' : 'opacity .7s ease-out'};background:radial-gradient(circle at ${ui.gx}% ${ui.gy}%, color-mix(in oklch, ${c} 70%, transparent) 0%, color-mix(in oklch, ${c} 22%, transparent) 30%, transparent 65%)"></div>`;
 }
-function ticks(f, c, n, tgt) {
+function ticks(f, c, n, tgt, s = 1) {
   let h = '';
   for (let i = 0; i < n; i++) {
     const x = i / (n - 1), isT = Math.abs(x - tgt) < 0.5 / (n - 1);
-    h += `<span style="flex:none;width:${isT ? 2 : 1.5}px;height:${isT ? 22 : (i % 5 === 0 ? 14 : 8)}px;border-radius:1px;background:${x <= f + 0.001 ? c : (isT ? '#8a8a90' : '#333337')};transition:background .12s"></span>`;
+    h += `<span style="flex:none;width:${isT ? 2 : 1.5}px;height:${(isT ? 22 : (i % 5 === 0 ? 14 : 8)) * s}px;border-radius:1px;background:${x <= f + 0.001 ? c : (isT ? '#8a8a90' : '#333337')};transition:background .12s"></span>`;
   }
   return h;
 }
-const head = (f) => `<span class="head" style="position:absolute;left:calc(${f * 100}% - 1px);bottom:-3px;width:2px;height:30px;background:#f2f2f0;border-radius:2px;pointer-events:none;transition:${ui.drag ? 'none' : 'left .3s ease'}"></span>`;
+// read-only pill used on home tiles (the tile itself is the tap target)
+function chip(label, on, c, disabled) {
+  return `<span style="flex:1;min-width:0;height:40px;display:flex;align-items:center;justify-content:center;border-radius:999px;padding:0 10px;box-sizing:border-box;font-size:14px;font-weight:600;letter-spacing:-0.01em;background:${on ? c : 'transparent'};color:${on ? '#0b0b0c' : '#c8c8cc'};border:1px solid ${on ? c : '#333337'};opacity:${disabled ? 0.35 : 1};transition:background .18s, color .18s, border-color .18s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</span>`;
+}
+const TILE_CSS = 'cursor:pointer;transition:transform .15s;-webkit-user-select:none;user-select:none';
+const tile = (k) => `class="tile" data-act="edit" data-k="${k}" role="button" aria-label="Edit ${k}"`;
+function wheelHtml(pages, c, scale) {
+  return [-2, -1, 0, 1, 2].map(k => {
+    const v = pages + k, a = Math.abs(k), h = (a === 0 ? 46 : a === 1 ? 24 : 18) * scale;
+    return `<span style="display:block;height:${h}px;line-height:${h}px;font-size:${(a === 0 ? 42 : a === 1 ? 20 : 14) * scale}px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:${a === 0 && pages >= 10 ? c : '#f2f2f0'};opacity:${a === 0 ? 1 : a === 1 ? 0.35 : 0.12};filter:${a === 2 ? 'blur(1px)' : 'none'}">${v < 0 ? '&nbsp;' : String(v).padStart(2, '0')}</span>`;
+  }).join('');
+}
+const head = (f, h = 30) => `<span class="head" style="position:absolute;left:calc(${f * 100}% - 1px);bottom:-3px;width:2px;height:${h}px;background:#f2f2f0;border-radius:2px;pointer-events:none;transition:${ui.drag ? 'none' : 'left .3s ease'}"></span>`;
 const tint = (c, pad = '14px 16px') => `background:color-mix(in oklch, ${c} 14%, #141416);border-radius:18px;padding:${pad};display:flex;flex-direction:column;gap:8px;transition:background .3s`;
 
 // ---------- Today ----------
@@ -115,11 +132,11 @@ function todayPane(today) {
   const mealsN = p.meals.filter(Boolean).length, gratN = p.grat.filter(g => g.trim()).length;
   const oBar = (f) => `<div style="height:100%;width:${ol ? f * 100 : 0}%;background:${OC};border-radius:2px;transition:width .4s ease"></div>`;
   const sl = fr(p.sleep, 4, 10), ou = fr(p.outside, 0, 40), st = fr(p.steps, 0, 15000);
-  const ring = (on) => `box-shadow:${on ? `inset 0 0 0 1px ${SC}` : 'none'};transition:box-shadow .3s`;
-  const wheel = [-2, -1, 0, 1, 2].map(k => {
-    const v = p.pages + k, a = Math.abs(k), h = a === 0 ? 46 : a === 1 ? 24 : 18;
-    return `<span style="display:block;height:${h}px;line-height:${h}px;font-size:${a === 0 ? 42 : a === 1 ? 20 : 14}px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:${a === 0 && p.pages >= 10 ? SC : '#f2f2f0'};opacity:${a === 0 ? 1 : a === 1 ? 0.35 : 0.12};filter:${a === 2 ? 'blur(1px)' : 'none'}">${v < 0 ? '&nbsp;' : String(v).padStart(2, '0')}</span>`;
-  }).join('');
+  const ring = (on) => `box-shadow:${on ? `inset 0 0 0 1px ${SC}` : 'none'};transition:box-shadow .3s, transform .15s`;
+  const wu = isWarmup(today);
+  const gymMeta = wu ? `${gymWk} · warm-up` : gymWk >= 4 ? 'week done' : `${gymWk}/4 this wk`;
+  const runMeta = wu ? `runs ${runWk} · warm-up week` : runWk >= 3 ? `runs ${runWk}/3 · done` : `runs ${runWk}/3 this wk`;
+  const readMeta = wu ? `${pagesWk} pp · warm-up` : `${pagesWk}/50 wk`;
 
   const strip = Array.from({ length: 31 }, (_, i) => {
     const d = i + 1; let fs = 0, fo = 0;
@@ -143,6 +160,7 @@ function todayPane(today) {
         <span style="font-family:${MONO};font-size:11px;letter-spacing:.06em;color:#8a8a90">${WDS[wd(today)]} · OCT ${today}${night ? ' · ' + timeStr(n0.getTime()).toUpperCase() : ''}</span>
       </div>
     </div>
+    ${S.practice ? `<div style="margin:14px 16px 0;display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border-radius:999px;background:#161618;font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#a0a0a6"><span style="width:6px;height:6px;border-radius:50%;background:${SC}"></span><span style="flex:1">PRACTICE DAY · NOT YOUR REAL OCTOBER</span><button data-act="exitPractice" style="height:28px;padding:0 12px;border-radius:999px;border:1px solid #2a2a2e;background:#1c1c1f;color:#f2f2f0;font-family:${MONO};font-size:10.5px;letter-spacing:.06em;cursor:pointer">EXIT</button></div>` : ''}
     ${offline ? `<div style="margin:14px 16px 0;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#161618;font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#a0a0a6"><span style="width:6px;height:6px;border-radius:50%;background:#8a8a90"></span>OFFLINE · SAVED ON THIS PHONE, SYNCS WHEN BACK</div>` : ''}
     <div style="padding:0 16px ${BOTTOM};display:flex;flex-direction:column;gap:10px">
       <p style="margin:16px 0 8px;font-size:21px;line-height:1.28;letter-spacing:-0.015em;font-weight:500;text-wrap:pretty">${sum}</p>
@@ -157,13 +175,12 @@ function todayPane(today) {
       </div>
 
       <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
-        <div data-scrub="water" style="grid-row:span 2;position:relative;overflow:hidden;background:#161618;border-radius:22px;min-height:250px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ns-resize">
-          <div class="fill" style="position:absolute;left:0;right:0;bottom:0;height:${fr(p.water, 0, 3.5) * 100}%;background:color-mix(in oklch, ${SC} 24%, #161618);border-top:2px solid ${SC};transition:${ui.drag === 'water' ? 'none' : 'height .45s cubic-bezier(.2,.8,.2,1)'}"></div>
+        <div ${tile('water')} style="grid-row:span 2;position:relative;overflow:hidden;background:#161618;border-radius:22px;min-height:250px;${TILE_CSS}">
+          <div class="fill" style="position:absolute;left:0;right:0;bottom:0;height:${fr(p.water, 0, 3.5) * 100}%;background:color-mix(in oklch, ${SC} 24%, #161618);border-top:2px solid ${SC};transition:height .45s cubic-bezier(.2,.8,.2,1)"></div>
           <div style="position:absolute;right:14px;width:28px;bottom:71.4%;border-top:1px dashed #55555a"></div>
-          ${glow('water', SC)}
           <div style="position:relative;padding:14px 16px;display:flex;flex-direction:column;height:100%;box-sizing:border-box">
             <div style="${LBL}">WATER</div>
-            <div style="margin-top:4px;display:flex;align-items:baseline;gap:3px"><span style="font-size:48px;font-weight:500;letter-spacing:-0.045em;font-variant-numeric:tabular-nums">${p.water.toFixed(1)}</span><span style="font-size:17px;color:#6b6b70">/2.5 L</span></div>
+            <div style="margin-top:4px;display:flex;align-items:baseline;gap:3px"><span style="font-size:48px;font-weight:500;letter-spacing:-0.045em;font-variant-numeric:tabular-nums">${fmtW(p.water)}</span><span style="font-size:17px;color:#6b6b70">/2.5 L</span></div>
             <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
               ${oRow(oTxt(`${o.water.toFixed(1)} L`))}
               <div style="height:3px;background:#2a2a2e;border-radius:2px;overflow:hidden">${oBar(fr(o.water, 0, 2.5))}</div>
@@ -171,25 +188,23 @@ function todayPane(today) {
           </div>
         </div>
 
-        <div style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div ${tile('junk')} style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px;${TILE_CSS}">
           <div style="display:flex;justify-content:space-between;${LBL}"><span>NO JUNK</span><span style="white-space:nowrap">${cheatsOut ? 'no cheats left' : `cheats ${cheatsUsed}/3`}</span></div>
-          <div style="display:flex;gap:6px">${pill('Clean', p.junk === 'clean', SC, 'junk:clean')}${pill('Cheat', p.junk === 'cheat', SC, 'junk:cheat', cheatsOut)}</div>
+          <div style="display:flex;gap:6px">${chip('Clean', p.junk === 'clean', SC)}${chip('Cheat', p.junk === 'cheat', SC, cheatsOut)}</div>
           ${oRow(ol ? (o.junk === 'cheat' ? 'had a cheat meal' : 'clean so far') : '—')}
         </div>
 
-        <div data-scrub="sleep" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize">
-          ${glow('sleep', SC)}
+        <div ${tile('sleep')} style="position:relative;overflow:hidden;background:#161618;border-radius:22px;${TILE_CSS}">
           <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:8px">
             <div style="${LBL}">SLEEP</div>
             <div style="display:flex;align-items:baseline;gap:4px"><span style="font-size:30px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums">${p.sleep}</span><span style="font-size:14px;color:#6b6b70">hrs</span></div>
-            <div data-ruler="1" style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(sl, SC, 25, 0.5)}${head(sl)}</div>
+            <div style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(sl, SC, 25, 0.5)}${head(sl)}</div>
             ${oRow(oTxt(`${o.sleep} hrs`))}
           </div>
         </div>
       </div>
 
-      <div data-scrub="outside" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize">
-        ${glow('outside', SC)}
+      <div ${tile('outside')} style="position:relative;overflow:hidden;background:#161618;border-radius:22px;${TILE_CSS}">
         <div style="position:relative;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
             <div style="display:flex;flex-direction:column;gap:4px">
@@ -198,48 +213,46 @@ function todayPane(today) {
             </div>
             ${oRow(oTxt(`${o.outside} min`))}
           </div>
-          <div data-ruler="1" style="position:relative;height:28px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(ou, SC, 41, 0.5)}${head(ou)}</div>
+          <div style="position:relative;height:28px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(ou, SC, 41, 0.5)}${head(ou)}</div>
           <div style="height:3px;background:#2a2a2e;border-radius:2px;overflow:hidden">${oBar(fr(o.outside, 0, 40))}</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:10px">
-        <div style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;${LBL}"><span>GYM</span><span style="white-space:nowrap">${gymWk >= 4 ? 'week done' : `${gymWk}/4 this wk`}</span></div>
-          <div style="display:flex;gap:6px">${pill('Gym', p.gym, SC, 'gym')}${pill('Run', p.run, SC, 'run')}</div>
-          <div style="font-family:${MONO};font-size:11px;color:#6b6b70">${runWk >= 3 ? `runs ${runWk}/3 · done` : `runs ${runWk}/3 this wk`}</div>
-          ${oRow(ol ? `${o.gym ? 'gym' : 'rest'}${o.run ? ' + run' : ''} · ${oGymWk}/4` : '—')}
+        <div ${tile('gym')} style="background:#161618;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px;${TILE_CSS}">
+          <div style="display:flex;justify-content:space-between;${LBL}"><span>GYM</span><span style="white-space:nowrap">${gymMeta}</span></div>
+          <div style="display:flex;gap:6px">${chip('Gym', p.gym, SC)}${chip('Run', p.run, SC)}</div>
+          <div style="font-family:${MONO};font-size:11px;color:#6b6b70">${runMeta}</div>
+          ${oRow(ol ? `${o.gym ? 'gym' : 'rest'}${o.run ? ' + run' : ''} · ${wu ? oGymWk : `${oGymWk}/4`}` : '—')}
         </div>
-        <div data-scrub="steps" style="position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize">
-          ${glow('steps', SC)}
+        <div ${tile('steps')} style="position:relative;overflow:hidden;background:#161618;border-radius:22px;${TILE_CSS}">
           <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:8px">
             <div style="${LBL}">STEPS</div>
             <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:30px;font-weight:500;letter-spacing:-0.04em;font-variant-numeric:tabular-nums">${(p.steps / 1000).toFixed(1)}k</span><span style="font-size:14px;color:#6b6b70">/10k</span></div>
-            <div data-ruler="1" style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(st, SC, 16, 2 / 3)}${head(st)}</div>
+            <div style="position:relative;height:24px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(st, SC, 16, 2 / 3)}${head(st)}</div>
             ${oRow(oTxt(`${(o.steps / 1000).toFixed(1)}k`))}
           </div>
         </div>
       </div>
 
-      <div style="background:#161618;border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div ${tile('meals')} style="background:#161618;border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;${TILE_CSS}">
         <div style="display:flex;justify-content:space-between;${LBL}"><span>PHONE-FREE MEALS</span><span style="white-space:nowrap">${mealsN}/3</span></div>
-        <div style="display:flex;gap:6px">${['Breakfast', 'Lunch', 'Dinner'].map((m, i) => pill(m, p.meals[i], SC, `meal:${i}`)).join('')}</div>
+        <div style="display:flex;gap:6px">${['Breakfast', 'Lunch', 'Dinner'].map((m, i) => chip(m, p.meals[i], SC)).join('')}</div>
         ${oRow(oTxt(`${o.meals.filter(Boolean).length}/3 phone-free`))}
       </div>
 
       <div style="display:grid;grid-template-columns:minmax(0,0.8fr) minmax(0,1.2fr);gap:10px">
-        <div data-wheel="1" style="background:#161618;border-radius:22px;${ring(night && p.pages < 10)};position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ns-resize">
-          ${glow('pages', SC)}
+        <div ${tile('pages')} style="background:#161618;border-radius:22px;${ring(night && p.pages < 10)};position:relative;overflow:hidden;${TILE_CSS}">
           <div style="position:relative;padding:14px;display:flex;flex-direction:column;gap:4px">
-            <div style="display:flex;justify-content:space-between;${LBL}"><span>READ</span><span style="white-space:nowrap">${pagesWk}/50 wk</span></div>
-            <div style="display:flex;flex-direction:column;align-items:center;margin:2px 0">${wheel}</div>
+            <div style="display:flex;justify-content:space-between;${LBL}"><span>READ</span><span style="white-space:nowrap">${readMeta}</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;margin:2px 0">${wheelHtml(p.pages, SC, 1)}</div>
             <div style="text-align:center;font-family:${MONO};font-size:10.5px;letter-spacing:.08em;color:#6b6b70">PAGES · /10</div>
             ${oRow(oTxt(`${o.pages} pages`), ';justify-content:center;margin-top:4px')}
           </div>
         </div>
-        <div style="background:#161618;border-radius:22px;${ring(night && gratN < 3)};padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div ${tile('grat')} style="background:#161618;border-radius:22px;${ring(night && gratN < 3)};padding:14px;display:flex;flex-direction:column;gap:8px;${TILE_CSS}">
           <div style="display:flex;justify-content:space-between;${LBL}"><span>GRATITUDE</span><span style="white-space:nowrap">${gratN}/3</span></div>
-          ${p.grat.map((g, i) => `<div style="display:flex;align-items:baseline;gap:8px;border-bottom:1px solid #26262a;padding-bottom:6px"><span style="font-family:${MONO};font-size:10.5px;color:#55555a">0${i + 1}</span><input data-input="grat" data-i="${i}" data-value="${esc(g)}" placeholder="Tonight…" maxlength="80" enterkeyhint="next" style="flex:1;min-width:0;background:transparent;border:0;outline:none;color:#f2f2f0;font-family:Geist,system-ui,sans-serif;font-size:14px;padding:0"></div>`).join('')}
+          ${p.grat.map((g, i) => `<div style="display:flex;align-items:baseline;gap:8px;border-bottom:1px solid #26262a;padding-bottom:6px;min-width:0"><span style="font-family:${MONO};font-size:10.5px;color:#55555a">0${i + 1}</span><span style="flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${g.trim() ? '#f2f2f0' : '#55555a'}">${g.trim() ? esc(g) : 'Tonight…'}</span></div>`).join('')}
           ${oRow(oTxt(`${o.grat.filter(g => g.trim()).length}/3 written`))}
         </div>
       </div>
@@ -287,10 +300,11 @@ function calendarPane(today, finished) {
 
   const cs = (c) => `font-family:${MONO};font-size:13px;color:${c};text-align:right`;
   const wk = (w, f) => weekSum(w, t, f);
+  const wu = !finished && isWarmup(t), of = (n, max) => wu ? `${n}` : `${n}/${max}`, wl = wu ? ' · warm-up' : ' this week';
   const counters = [
-    ['Gym this week', `${wk(self, e => e.gym ? 1 : 0)}/4`, `${wk(other, e => e.gym ? 1 : 0)}/4`],
-    ['Runs this week', `${wk(self, e => e.run ? 1 : 0)}/3`, `${wk(other, e => e.run ? 1 : 0)}/3`],
-    ['Pages this week', `${wk(self, e => e.pages || 0)}/50`, `${wk(other, e => e.pages || 0)}/50`],
+    [`Gym${wl}`, of(wk(self, e => e.gym ? 1 : 0), 4), of(wk(other, e => e.gym ? 1 : 0), 4)],
+    [`Runs${wl}`, of(wk(self, e => e.run ? 1 : 0), 3), of(wk(other, e => e.run ? 1 : 0), 3)],
+    [`Pages${wl}`, of(wk(self, e => e.pages || 0), 50), of(wk(other, e => e.pages || 0), 50)],
     ['Cheat meals', `${Math.min(3, myCheats)}/3`, `${Math.min(3, oCheats)}/3`]
   ].map(([name, s, o]) => `<div style="display:grid;grid-template-columns:1fr 64px 64px;align-items:center;padding:10px 0;border-bottom:1px solid #222226;font-size:14px"><span style="color:#c8c8cc">${name}</span><span style="${cs(SC)}">${s}</span><span style="${cs(OC)}">${o}</span></div>`).join('');
 
@@ -385,6 +399,80 @@ function daySheet() {
   </div>`;
 }
 
+// ---------- Edit sheet: tap a tile, it grows into this ----------
+const RANGE = { water: [0, 3.5], sleep: [4, 10], outside: [0, 40], steps: [0, 15000], pages: [0, 60] };
+const fmtW = (v) => (Math.round(v * 100) % 10 ? v.toFixed(2) : v.toFixed(1));
+function stepBtns(k, list) {
+  return `<div style="display:flex;gap:6px">${list.map(([label, v]) => `<button data-act="step" data-k="${k}" data-v="${v}" style="flex:1;min-width:0;height:44px;border-radius:999px;border:1px solid #333337;background:transparent;color:#c8c8cc;font-family:${MONO};font-size:13px;letter-spacing:.02em;cursor:pointer;transition:transform .12s">${label}</button>`).join('')}</div>`;
+}
+const bigPill = (label, on, c, act, dis) => pill(label, on, c, act, dis).replace('height:40px', 'height:52px').replace('font-size:14px', 'font-size:16px');
+function editSheet() {
+  const k = ui.edit.k, today = todayNum(), { self, other } = ids();
+  const p = P(self, today), o = P(other, today), ol = logged(other, today);
+  const SC = col(self), OC = col(other), oName = other === 'b' ? 'her' : 'him';
+  const wu = isWarmup(today);
+  const oLine = (v) => `<div style="display:flex;align-items:center;gap:6px;font-family:${MONO};font-size:12px;color:${ol ? OC : '#55555a'};white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;flex:none;background:${ol ? OC : 'transparent'};box-shadow:${ol ? 'none' : `inset 0 0 0 1px ${OC}`}"></span>${oName} ${esc(ol ? v : '—')}</div>`;
+  const big = (v, unit) => `<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:64px;font-weight:500;letter-spacing:-0.045em;line-height:1;font-variant-numeric:tabular-nums">${v}</span><span style="font-size:20px;color:#6b6b70">${unit}</span></div>`;
+  const box = 'position:relative;overflow:hidden;background:#161618;border-radius:22px;touch-action:none;user-select:none;-webkit-user-select:none';
+  const ruler = (key, f, n, tgt) => `<div data-scrub="${key}" style="${box};padding:24px 18px 26px;cursor:ew-resize">${glow(key, SC)}<div data-ruler="1" style="position:relative;height:40px;display:flex;align-items:flex-end;justify-content:space-between">${ticks(f, SC, n, tgt, 1.7)}${head(f, 48)}</div></div>`;
+  const hint = (t) => `<div style="font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#55555a;text-align:center">${t}</div>`;
+  const gymWk = weekSum(self, today, e => e.gym ? 1 : 0), runWk = weekSum(self, today, e => e.run ? 1 : 0), pagesWk = weekSum(self, today, e => e.pages || 0);
+  const cheatsUsed = monthCheats(self, today), cheatsOut = cheatsUsed >= 3 && p.junk !== 'cheat';
+  let title, goal, value, other_, body;
+  if (k === 'water') {
+    title = 'WATER'; goal = 'GOAL 2.5 L · BLACK COFFEE OK'; value = big(fmtW(p.water), 'L'); other_ = oLine(`${o.water.toFixed(1)} L`);
+    body = `<div data-scrub="water" style="${box};height:280px;cursor:ns-resize">
+        <div class="fill" style="position:absolute;left:0;right:0;bottom:0;height:${fr(p.water, 0, 3.5) * 100}%;background:color-mix(in oklch, ${SC} 24%, #161618);border-top:2px solid ${SC};transition:${ui.drag === 'water' ? 'none' : 'height .45s cubic-bezier(.2,.8,.2,1)'}"></div>
+        <div style="position:absolute;left:16px;right:16px;bottom:71.4%;border-top:1px dashed #55555a"></div>
+        <div style="position:absolute;right:16px;bottom:calc(71.4% + 6px);font-family:${MONO};font-size:10.5px;color:#8a8a90">2.5 L</div>
+        ${glow('water', SC)}
+        <div style="position:absolute;left:0;right:0;bottom:14px">${hint('DRAG UP OR DOWN')}</div>
+      </div>${stepBtns('water', [['−0.25 L', -0.25], ['+0.25 L', 0.25], ['+0.5 L', 0.5]])}`;
+  } else if (k === 'sleep') {
+    title = 'SLEEP'; goal = 'GOAL 7 TO 8 HOURS'; value = big(p.sleep, 'hrs'); other_ = oLine(`${o.sleep} hrs`);
+    body = ruler('sleep', fr(p.sleep, 4, 10), 25, 0.5) + hint('DRAG ACROSS · 4 TO 10 HOURS') + stepBtns('sleep', [['−15 min', -0.25], ['+15 min', 0.25], ['+1 h', 1]]);
+  } else if (k === 'outside') {
+    title = 'OUTSIDE'; goal = 'GOAL 20 MINUTES'; value = big(p.outside, 'min'); other_ = oLine(`${o.outside} min`);
+    body = ruler('outside', fr(p.outside, 0, 40), 41, 0.5) + hint('DRAG ACROSS · 0 TO 40 MIN') + stepBtns('outside', [['−5 min', -5], ['+5 min', 5], ['+10 min', 10]]);
+  } else if (k === 'steps') {
+    title = 'STEPS'; goal = 'GOAL 10,000'; value = big((p.steps / 1000).toFixed(1) + 'k', 'steps'); other_ = oLine(`${(o.steps / 1000).toFixed(1)}k`);
+    body = ruler('steps', fr(p.steps, 0, 15000), 16, 2 / 3) + hint('DRAG ACROSS · 0 TO 15K') + stepBtns('steps', [['−500', -500], ['+500', 500], ['+1k', 1000]]);
+  } else if (k === 'pages') {
+    title = 'READ'; goal = wu ? 'GOAL 10 PAGES · WARM-UP WEEK' : `GOAL 10 PAGES · ${pagesWk}/50 THIS WEEK`; value = big(p.pages, 'pages'); other_ = oLine(`${o.pages} pages`);
+    body = `<div data-wheel="1" style="${box};padding:16px 0 14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:ns-resize">${glow('pages', SC)}<div style="position:relative;display:flex;flex-direction:column;align-items:center">${wheelHtml(p.pages, SC, 1.35)}</div><div style="position:relative">${hint('DRAG UP OR DOWN')}</div></div>` + stepBtns('pages', [['−1', -1], ['+1', 1], ['+5', 5], ['+10', 10]]);
+  } else if (k === 'junk') {
+    title = 'NO JUNK'; goal = cheatsOut ? 'NO CHEATS LEFT THIS MONTH' : `CHEAT MEALS ${cheatsUsed}/3 THIS MONTH`; value = big(p.junk === 'cheat' ? 'Cheat' : p.junk === 'clean' ? 'Clean' : '—', ''); other_ = oLine(o.junk === 'cheat' ? 'had a cheat meal' : 'clean so far');
+    body = `<div style="display:flex;gap:8px">${bigPill('Clean', p.junk === 'clean', SC, 'junk:clean')}${bigPill('Cheat', p.junk === 'cheat', SC, 'junk:cheat', cheatsOut)}</div>` +
+      `<div style="background:#161618;border-radius:18px;padding:14px 16px;font-family:${MONO};font-size:10.5px;line-height:1.7;letter-spacing:.04em;color:#8a8a90">JUNK = FRIED, OILY · PACKAGED, INSTANT<br>PANI PURI FAMILY · BAKED ITEMS<br>SWEETS, SOLID CHOCOLATE</div>`;
+  } else if (k === 'gym') {
+    title = 'GYM'; goal = wu ? `WARM-UP WEEK · ${gymWk} GYM · ${runWk} RUNS` : `${gymWk}/4 THIS WEEK · RUNS ${runWk}/3`; value = big(p.gym ? (p.run ? 'Gym + run' : 'Gym') : 'Rest', ''); other_ = oLine(`${o.gym ? 'gym' : 'rest'}${o.run ? ' + run' : ''}`);
+    body = `<div style="display:flex;gap:8px">${bigPill('Gym', p.gym, SC, 'gym')}${bigPill('Run', p.run, SC, 'run')}</div>` + hint('A RUN COUNTS AS A GYM SESSION');
+  } else if (k === 'meals') {
+    title = 'PHONE-FREE MEALS'; goal = 'NO PHONE AT ANY MEAL'; value = big(`${p.meals.filter(Boolean).length}/3`, 'meals'); other_ = oLine(`${o.meals.filter(Boolean).length}/3`);
+    body = `<div style="display:flex;gap:8px">${['Breakfast', 'Lunch', 'Dinner'].map((m, i) => bigPill(m, p.meals[i], SC, `meal:${i}`)).join('')}</div>`;
+  } else {
+    title = 'GRATITUDE'; goal = '3 THINGS, TONIGHT'; value = big(`${p.grat.filter(g => g.trim()).length}/3`, 'written'); other_ = oLine(`${o.grat.filter(g => g.trim()).length}/3 written`);
+    body = `<div style="background:#161618;border-radius:22px;padding:6px 16px">${p.grat.map((g, i) => `<div style="display:flex;align-items:baseline;gap:10px;padding:14px 0;${i < 2 ? 'border-bottom:1px solid #26262a' : ''}"><span style="font-family:${MONO};font-size:11px;color:#55555a">0${i + 1}</span><input data-input="grat" data-i="${i}" data-value="${esc(g)}" placeholder="Something good today…" maxlength="80" enterkeyhint="${i < 2 ? 'next' : 'done'}" style="flex:1;min-width:0;background:transparent;border:0;outline:none;color:#f2f2f0;font-family:Geist,system-ui,sans-serif;font-size:17px;padding:0"></div>`).join('')}</div>`;
+  }
+  const ph = ui.edit.phase, open = ph === 'open';
+  const tr = ph === 'measure' || open ? 'none' : ui.edit.from;
+  const trans = ph === 'measure' || ph === 'from' ? 'none' : 'transform .42s cubic-bezier(.2,.8,.2,1), border-radius .42s cubic-bezier(.2,.8,.2,1)';
+  return `
+  <div data-act="closeEdit" style="position:absolute;inset:0;background:rgba(0,0,0,.6);opacity:${open ? 1 : 0};transition:opacity .35s ease;z-index:7"></div>
+  <div class="edit-sheet scroll" data-noswipe="1" style="position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;background:#111113;border-radius:${open ? '28px 28px 0 0' : '22px'};box-shadow:0 -1px 0 #26262a;transform-origin:0 0;transform:${tr};transition:${trans};visibility:${ph === 'measure' ? 'hidden' : 'visible'};z-index:8">
+    <div style="opacity:${open ? 1 : 0};transition:${open ? 'opacity .25s ease .12s' : 'opacity .1s ease'}">
+      <div style="display:flex;justify-content:center;padding:10px 0 4px"><span style="width:38px;height:4px;border-radius:2px;background:#3a3a3e"></span></div>
+      <div style="padding:6px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="${LBL}">${title}</span><button class="close-x" data-act="closeEdit" aria-label="Close" style="width:34px;height:34px;border-radius:50%;border:1px solid #2a2a2e;background:#1c1c1f;color:#c8c8cc;font-size:15px;cursor:pointer">✕</button></div>
+        ${value}
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:-6px"><span style="font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#6b6b70">${goal}</span>${other_}</div>
+        ${body}
+        <button data-act="closeEdit" style="height:52px;border-radius:999px;border:0;background:#f2f2f0;color:#0b0b0c;font-family:Geist,system-ui,sans-serif;font-size:16px;font-weight:600;cursor:pointer;transition:transform .12s;margin-top:4px">Done</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ---------- screens outside the month / auth ----------
 function shell(inner) {
   return `<div class="scroll" style="height:100%;overflow-y:auto;padding:${TOP} 16px ${BOTTOM};box-sizing:border-box;display:flex;flex-direction:column;gap:18px">${inner}</div>`;
@@ -398,6 +486,9 @@ function beforeScreen() {
     <div style="display:flex;align-items:baseline;gap:4px"><span style="font-size:58px;font-weight:500;letter-spacing:-0.045em;line-height:.9">${String(days).padStart(2, '0')}</span><span style="font-size:58px;font-weight:500;letter-spacing:-0.045em;line-height:.9;color:#34343a">${days === 1 ? 'day' : 'days'}</span></div>
     <p style="margin:0;font-size:21px;line-height:1.28;letter-spacing:-0.015em;font-weight:500;text-wrap:pretty">${span(days === 1 ? 'October starts tomorrow. ' : `October starts in ${days} days. `, '#f2f2f0')}${span('Nine goals, thirty-one days, you and ' + oName + '.', '#6b6b70')}</p>
     <div style="background:#161618;border-radius:18px;padding:6px 16px">${rules.map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #222226"><span style="${LBL}">${k}</span><span style="font-size:14px;color:#c8c8cc;text-align:right">${v}</span></div>`).join('')}</div>
+    <p style="margin:0;font-size:15px;line-height:1.4;color:#8a8a90">Week one (Thu 1 to Sun 4) is a warm-up: gym, runs and pages are counted but not scored.</p>
+    <button data-act="startPractice" style="height:48px;border-radius:999px;border:0;background:#f2f2f0;color:#0b0b0c;font-family:Geist,system-ui,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform .12s">Try a practice day</button>
+    <div style="font-family:${MONO};font-size:10.5px;letter-spacing:.06em;color:#55555a;text-align:center">PRETEND IT'S OCT 15 · LOG, SEE EACH OTHER · YOUR REAL MONTH STAYS EMPTY</div>
     <div style="display:flex;gap:14px;font-family:${MONO};font-size:11px"><span style="color:${col(self)}">● you</span><span style="color:${col(other)}">● ${oName}</span></div>`);
 }
 function authScreen() {
@@ -428,6 +519,7 @@ function view() {
     </div>
     <div style="position:absolute;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:6px;pointer-events:none">${pd(ui.pane === 0)}${pd(ui.pane === 1)}</div>
     ${ui.sheetDay != null ? daySheet() : ''}
+    ${ui.edit ? editSheet() : ''}
   </div>`;
 }
 
@@ -468,6 +560,25 @@ function openSheet(d) {
   const sheet = root.querySelector('.sheet'); if (sheet) sheet.getBoundingClientRect(); // commit the off-screen position so the slide-up animates
   ui.sheetOpen = true; render();
 }
+// the sheet starts exactly over the tapped tile and grows to full size (FLIP)
+let editT;
+function openEdit(k, el) {
+  if (!canEdit()) return;
+  clearTimeout(editT);
+  const r = el.getBoundingClientRect();
+  ui.edit = { k, phase: 'measure', from: 'none' }; render();
+  const sh = root.querySelector('.edit-sheet'), f = sh.getBoundingClientRect();
+  ui.edit.from = `translate(${r.left - f.left}px, ${r.top - f.top}px) scale(${r.width / f.width}, ${r.height / f.height})`;
+  ui.edit.phase = 'from'; render();
+  sh.getBoundingClientRect();
+  ui.edit.phase = 'open'; render();
+}
+function closeEdit() {
+  if (!ui.edit || ui.edit.phase === 'closing') return;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  ui.edit.phase = 'closing'; render();
+  clearTimeout(editT); editT = setTimeout(() => { ui.edit = null; schedule(); }, 430);
+}
 let sheetT;
 function closeSheet() { ui.sheetOpen = false; schedule(); clearTimeout(sheetT); sheetT = setTimeout(() => { ui.sheetDay = null; schedule(); }, 380); }
 
@@ -502,7 +613,7 @@ root.addEventListener('pointerdown', (e) => {
     return;
   }
   // pane swipe
-  if (!root.querySelector('.track') || ui.sheetDay != null || e.target.closest('[data-noswipe],button,input,textarea')) return;
+  if (!root.querySelector('.track') || ui.sheetDay != null || ui.edit || e.target.closest('[data-noswipe],button,input,textarea')) return;
   const x0 = e.clientX, y0 = e.clientY, W = root.clientWidth || 390;
   let mode = null;
   const move = (ev) => {
@@ -532,6 +643,14 @@ root.addEventListener('click', (e) => {
   if (a === 'goCal') go(1);
   else if (a === 'goToday') go(0);
   else if (a === 'closeSheet') closeSheet();
+  else if (a === 'edit') openEdit(el.dataset.k, el);
+  else if (a === 'closeEdit') closeEdit();
+  else if (a === 'step') {
+    const k = el.dataset.k, [mn, mx] = RANGE[k];
+    set({ [k]: Math.round(Math.min(mx, Math.max(mn, (mine()[k] || 0) + +el.dataset.v)) * 100) / 100 });
+  }
+  else if (a === 'startPractice') location.href = './?practice=1';
+  else if (a === 'exitPractice') location.href = './';
   else if (a === 'swap') store.setSwap(!S.settings.swapColors);
   else if (a === 'signin') store.signIn();
   else if (a === 'signout') store.signOut();

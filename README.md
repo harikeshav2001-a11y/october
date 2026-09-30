@@ -22,6 +22,12 @@ Open http://localhost:8790
 - `&phone=hers` her perspective
 - `?now=2026-10-15T21:40` pretend it's that time (uses real saved data)
 - `?nosw=1` skip registering the service worker
+- `?practice=1` practice day (Oct 15 at the real time of day, sample history, synced in a separate `practice` space). Reached from the countdown's "Try a practice day" button.
+- `?local=1` skip Firebase entirely (local-only, for testing on a dev machine)
+
+## Design changes after the handoff
+- Home tiles are read-only; tapping a tile grows it into an edit sheet (FLIP from the tile's rect) with drag controls, ± buttons and big pills. Fixes scrolling over drag tiles.
+- Week 1 (Thu 1 to Sun 4) is a warm-up: weekly gym/runs/pages show plain counts, not targets.
 
 ## Data
 `couples/{coupleId}/entries/{a|b}_{day}`: one doc per person per day:

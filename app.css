@@ -7,10 +7,12 @@ button { -webkit-appearance: none; appearance: none; }
 button:active:not(:disabled) { transform: scale(0.95); }
 button.cal-cell:active:not(:disabled) { transform: scale(0.94); }
 button.close-x:active { transform: scale(0.92); }
+.tile:active { transform: scale(0.98); }
 .scroll { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .scroll::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .glow { display: none; }
-  .track, .sheet, .fill, .head { transition: none !important; }
+  .track, .sheet, .edit-sheet, .fill, .head { transition: none !important; }
+  .tile:active { transform: none; }
   button:active:not(:disabled) { transform: none; }
 }

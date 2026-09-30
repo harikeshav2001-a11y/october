@@ -11,7 +11,10 @@ export function metList(p) {
 }
 export const doneCount = (p) => metList(p).filter(Boolean).length;
 
-const KEY = 'october26:v1' + (new URLSearchParams(location.search).get('couple') ? ':test' : '');
+const Q = new URLSearchParams(location.search);
+export const PRACTICE = Q.has('practice');
+export const PRACTICE_DAY = 15;
+const KEY = 'october26:v1' + (Q.get('couple') || PRACTICE ? ':test' : '');
 const FB = '10.12.2';
 
 export function createStore(cfg, onChange) {
@@ -72,8 +75,8 @@ export function createStore(cfg, onChange) {
     const fauth = auth.getAuth(fapp);
     await auth.setPersistence(fauth, auth.browserLocalPersistence).catch(() => { });
     const db = fs.initializeFirestore(fapp, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentMultipleTabManager() }) });
-    // ?couple=test writes to a separate test space so trial runs never touch the real month
-    const coupleId = new URLSearchParams(location.search).get('couple') || cfg.coupleId;
+    // ?couple=test and ?practice write to separate spaces so trial runs never touch the real month
+    const coupleId = Q.get('couple') || (PRACTICE ? 'practice' : cfg.coupleId);
     const couple = fs.doc(db, 'couples', coupleId);
     const col = fs.collection(couple, 'entries');
     let unsub = [];
@@ -133,7 +136,16 @@ export function createStore(cfg, onChange) {
     const q = new URLSearchParams(location.search);
     if (q.get('demo')) { s.mode = 'demo'; loadDemo(s, q.get('demo'), q.get('phone') === 'hers' ? 'b' : 'a'); return; }
     loadCache();
-    if (cfg.firebase && cfg.firebase.apiKey) {
+    if (PRACTICE) {
+      // sample history for the days before the practice day, kept on this phone only
+      s.practice = true;
+      const cheats = { a: 0, b: 0 };
+      for (let d = 1; d < PRACTICE_DAY; d++) for (const w of ['a', 'b']) {
+        const e = histEntry(d, w, cheats);
+        if (!s.entries[w][d] || s.entries[w][d].updatedAt <= 1) s.entries[w][d] = { ...e, updatedAt: 1 };
+      }
+    }
+    if (cfg.firebase && cfg.firebase.apiKey && !q.has('local')) { // ?local skips sync, for testing on a dev machine
       startFirebase().catch(e => {
         // SDK could not load (offline on first open): keep working locally
         s.authError = 'sync-unavailable'; s.auth = 'ready'; s.mode = 'local'; onChange();
